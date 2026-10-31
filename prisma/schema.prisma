@@ -1,0 +1,118 @@
+// =============================================================================
+// TypeHere — Prisma Database Schema
+// =============================================================================
+
+datasource db {
+  provider = "postgresql"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// ----------------------------------------------------
+// NextAuth Standard Models
+// ----------------------------------------------------
+model Account {
+  id                String  @id @default(uuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(uuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ----------------------------------------------------
+// User Profile & Preferences
+// ----------------------------------------------------
+model User {
+  id            String       @id @default(uuid())
+  name          String?
+  email         String?      @unique
+  emailVerified DateTime?
+  image         String?
+  username      String?      @unique
+  bio           String?      @db.VarChar(160)
+
+  // Persisted UI & Typing Preferences
+  theme         String       @default("obsidian")
+  fontFamily    String       @default("JetBrains Mono")
+  fontSize      String       @default("medium") // "small" | "medium" | "large"
+  cursorStyle   String       @default("line")   // "line" | "block" | "underline"
+  wordBankSize  Int          @default(1000)     // 1000 | 5000
+
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  accounts      Account[]
+  sessions      Session[]
+  testResults   TestResult[]
+
+  @@index([username])
+}
+
+// ----------------------------------------------------
+// Typing Test Results & Telemetry
+// ----------------------------------------------------
+model TestResult {
+  id                String   @id @default(uuid())
+  userId            String
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  duration          Int      // 60, 180, or 300 seconds
+  wpm               Float    // Net WPM
+  rawWpm            Float    // Raw WPM
+  accuracy          Float    // Percentage (0.00 - 100.00)
+  consistency       Float    // Percentage (0.00 - 100.00)
+
+  charactersTotal   Int
+  charactersCorrect Int
+  charactersWrong   Int
+  charactersExtra   Int
+  charactersMissed  Int      @default(0)
+
+  // Lightweight per-second array for fast chart & Ghost Pace rendering
+  timeline          Json     // PerSecondStat[]
+
+  // Mistyped character map for analytics
+  mistypedKeys      Json?    // Record<string, number>
+
+  // Full Replay Telemetry (Nullable for migrated guest tests)
+  telemetry         Json?    // TestTelemetry
+
+  // Verification & Anti-cheat
+  isVerified        Boolean  @default(true)
+  flaggedReason     String?
+
+  createdAt         DateTime @default(now())
+
+  @@index([userId, duration])
+  @@index([duration, isVerified, wpm(sort: Desc)])
+  @@index([createdAt])
+}

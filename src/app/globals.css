@@ -1,0 +1,405 @@
+@import "tailwindcss";
+
+/* =============================================================================
+   TypeHere — Liquid Glass Design System
+   Complete CSS variable architecture for 6 glassmorphic themes
+   ============================================================================= */
+
+/* -----------------------------------------------------------------------------
+   Theme: Obsidian Glass (Default Dark)
+   Deep onyx glass with warm amber/gold liquid reflections
+   ----------------------------------------------------------------------------- */
+:root,
+[data-theme="obsidian"] {
+  --bg-canvas: #07090e;
+  --bg-canvas-rgb: 7, 9, 14;
+  --orb-primary: rgba(245, 158, 11, 0.14);
+  --orb-secondary: rgba(217, 119, 6, 0.08);
+  --glass-surface: rgba(15, 23, 42, 0.45);
+  --glass-border: rgba(255, 255, 255, 0.10);
+  --glass-highlight: rgba(255, 255, 255, 0.16);
+  --accent-primary: #f59e0b;
+  --accent-primary-rgb: 245, 158, 11;
+  --accent-glow: rgba(245, 158, 11, 0.45);
+  --text-untyped: #f8fafc;
+  --text-typed: #64748b;
+  --text-error: #e15b64;
+  --text-error-bg: rgba(225, 91, 100, 0.14);
+  --text-extra: rgba(225, 91, 100, 0.7);
+}
+
+/* -----------------------------------------------------------------------------
+   Theme: Cyber Frost
+   Deep midnight-blue frosted glass with cyan and magenta neon refractions
+   ----------------------------------------------------------------------------- */
+[data-theme="cyber-frost"] {
+  --bg-canvas: #050814;
+  --bg-canvas-rgb: 5, 8, 20;
+  --orb-primary: rgba(6, 182, 212, 0.16);
+  --orb-secondary: rgba(217, 70, 239, 0.12);
+  --glass-surface: rgba(10, 18, 38, 0.50);
+  --glass-border: rgba(34, 211, 238, 0.16);
+  --glass-highlight: rgba(103, 232, 249, 0.22);
+  --accent-primary: #06b6d4;
+  --accent-primary-rgb: 6, 182, 212;
+  --accent-glow: rgba(6, 182, 212, 0.50);
+  --text-untyped: #ecfeff;
+  --text-typed: #64748b;
+  --text-error: #f43f5e;
+  --text-error-bg: rgba(244, 63, 94, 0.16);
+  --text-extra: rgba(244, 63, 94, 0.7);
+}
+
+/* -----------------------------------------------------------------------------
+   Theme: Aurora Borealis
+   Dark emerald base with iridescent teal and aurora-green ambient light leaks
+   ----------------------------------------------------------------------------- */
+[data-theme="aurora"] {
+  --bg-canvas: #040d0a;
+  --bg-canvas-rgb: 4, 13, 10;
+  --orb-primary: rgba(16, 185, 129, 0.15);
+  --orb-secondary: rgba(20, 184, 166, 0.10);
+  --glass-surface: rgba(6, 24, 19, 0.48);
+  --glass-border: rgba(52, 211, 153, 0.14);
+  --glass-highlight: rgba(110, 231, 183, 0.20);
+  --accent-primary: #10b981;
+  --accent-primary-rgb: 16, 185, 129;
+  --accent-glow: rgba(16, 185, 129, 0.45);
+  --text-untyped: #ecfdf5;
+  --text-typed: #52796f;
+  --text-error: #fb7185;
+  --text-error-bg: rgba(251, 113, 133, 0.15);
+  --text-extra: rgba(251, 113, 133, 0.7);
+}
+
+/* -----------------------------------------------------------------------------
+   Theme: Moonlight Opal
+   Smoked silver glass with ethereal violet/ice-blue highlights
+   ----------------------------------------------------------------------------- */
+[data-theme="moonlight-opal"] {
+  --bg-canvas: #090a10;
+  --bg-canvas-rgb: 9, 10, 16;
+  --orb-primary: rgba(167, 139, 250, 0.15);
+  --orb-secondary: rgba(96, 165, 250, 0.10);
+  --glass-surface: rgba(24, 24, 38, 0.48);
+  --glass-border: rgba(255, 255, 255, 0.12);
+  --glass-highlight: rgba(196, 181, 253, 0.22);
+  --accent-primary: #a78bfa;
+  --accent-primary-rgb: 167, 139, 250;
+  --accent-glow: rgba(167, 139, 250, 0.45);
+  --text-untyped: #f5f3ff;
+  --text-typed: #6b7280;
+  --text-error: #f87171;
+  --text-error-bg: rgba(248, 113, 113, 0.15);
+  --text-extra: rgba(248, 113, 113, 0.7);
+}
+
+/* -----------------------------------------------------------------------------
+   Theme: Solarized Liquid
+   Warm sepia-infused glass with deep bronze and tangerine accents
+   ----------------------------------------------------------------------------- */
+[data-theme="solarized-liquid"] {
+  --bg-canvas: #0c0906;
+  --bg-canvas-rgb: 12, 9, 6;
+  --orb-primary: rgba(249, 115, 22, 0.14);
+  --orb-secondary: rgba(234, 179, 8, 0.08);
+  --glass-surface: rgba(28, 19, 13, 0.50);
+  --glass-border: rgba(251, 146, 60, 0.14);
+  --glass-highlight: rgba(253, 186, 116, 0.18);
+  --accent-primary: #f97316;
+  --accent-primary-rgb: 249, 115, 22;
+  --accent-glow: rgba(249, 115, 22, 0.45);
+  --text-untyped: #fff7ed;
+  --text-typed: #78716c;
+  --text-error: #ef4444;
+  --text-error-bg: rgba(239, 68, 68, 0.15);
+  --text-extra: rgba(239, 68, 68, 0.7);
+}
+
+/* -----------------------------------------------------------------------------
+   Theme: Crystal Clear
+   High-transparency pure monochrome dark glass with crisp white accents
+   ----------------------------------------------------------------------------- */
+[data-theme="crystal-clear"] {
+  --bg-canvas: #050505;
+  --bg-canvas-rgb: 5, 5, 5;
+  --orb-primary: rgba(255, 255, 255, 0.07);
+  --orb-secondary: rgba(148, 163, 184, 0.05);
+  --glass-surface: rgba(255, 255, 255, 0.04);
+  --glass-border: rgba(255, 255, 255, 0.14);
+  --glass-highlight: rgba(255, 255, 255, 0.25);
+  --accent-primary: #ffffff;
+  --accent-primary-rgb: 255, 255, 255;
+  --accent-glow: rgba(255, 255, 255, 0.40);
+  --text-untyped: #ffffff;
+  --text-typed: #52525b;
+  --text-error: #e15b64;
+  --text-error-bg: rgba(225, 91, 100, 0.15);
+  --text-extra: rgba(225, 91, 100, 0.7);
+}
+
+/* =============================================================================
+   Tailwind Theme Inline Overrides
+   ============================================================================= */
+
+@theme inline {
+  --color-background: var(--bg-canvas);
+  --color-foreground: var(--text-untyped);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+/* =============================================================================
+   Glass Utility Classes
+   ============================================================================= */
+
+/* Frosted Glass Panel (Surface Level 1) */
+.glass-panel {
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  background: var(--glass-surface);
+  border: 1px solid var(--glass-border);
+  box-shadow:
+    inset 0 1px 1px 0 var(--glass-highlight),
+    0 20px 40px -15px rgba(0, 0, 0, 0.5);
+}
+
+/* Floating Glass Pill (Interactive Level 2) */
+.glass-pill {
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  background: var(--glass-surface);
+  border: 1px solid var(--glass-border);
+  border-radius: 9999px;
+  transition: all 200ms ease;
+}
+
+.glass-pill:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.18);
+  box-shadow: 0 0 20px rgba(var(--accent-primary-rgb), 0.15);
+}
+
+.glass-pill.active,
+.glass-pill[data-active="true"] {
+  background: rgba(var(--accent-primary-rgb), 0.15);
+  border-color: rgba(var(--accent-primary-rgb), 0.35);
+  color: var(--accent-primary);
+  box-shadow:
+    0 0 20px rgba(var(--accent-primary-rgb), 0.2),
+    inset 0 1px 1px 0 rgba(var(--accent-primary-rgb), 0.1);
+}
+
+/* Glass Input */
+.glass-input {
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--glass-border);
+  border-radius: 0.75rem;
+  color: var(--text-untyped);
+  transition: border-color 200ms ease, box-shadow 200ms ease;
+}
+
+.glass-input:focus {
+  outline: none;
+  border-color: rgba(var(--accent-primary-rgb), 0.5);
+  box-shadow: 0 0 0 3px rgba(var(--accent-primary-rgb), 0.1);
+}
+
+/* =============================================================================
+   Ambient Liquid Orbs (Background Canvas Level 0)
+   ============================================================================= */
+
+.liquid-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  pointer-events: none;
+  will-change: transform;
+}
+
+.liquid-orb-primary {
+  background: var(--orb-primary);
+}
+
+.liquid-orb-secondary {
+  background: var(--orb-secondary);
+}
+
+/* =============================================================================
+   Typing Arena Text Colors
+   ============================================================================= */
+
+.char-untyped {
+  color: var(--text-untyped);
+}
+
+.char-typed {
+  color: var(--text-typed);
+}
+
+.char-error {
+  color: var(--text-error);
+  background: var(--text-error-bg);
+  border-radius: 2px;
+}
+
+.char-extra {
+  color: var(--text-extra);
+  background: var(--text-error-bg);
+  border-radius: 2px;
+  opacity: 0.8;
+}
+
+/* =============================================================================
+   Smooth Caret Styles
+   ============================================================================= */
+
+.caret {
+  position: absolute;
+  pointer-events: none;
+  will-change: transform;
+  z-index: 10;
+  transition: transform 80ms cubic-bezier(0.22, 0.68, 0, 1);
+}
+
+.caret-line {
+  width: 2px;
+  background: var(--accent-primary);
+  box-shadow: 0 0 8px var(--accent-glow);
+  animation: caret-blink 1s ease-in-out infinite;
+}
+
+.caret-block {
+  background: rgba(var(--accent-primary-rgb), 0.3);
+  border: 1px solid var(--accent-primary);
+  animation: caret-block-pulse 1s ease-in-out infinite;
+}
+
+.caret-underline {
+  height: 2px !important;
+  background: var(--accent-primary);
+  box-shadow: 0 0 8px var(--accent-glow);
+  animation: caret-blink 1s ease-in-out infinite;
+}
+
+/* Ghost caret (semi-transparent, no animation) */
+.caret-ghost {
+  opacity: 0.35;
+  animation: none !important;
+}
+
+@keyframes caret-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+@keyframes caret-block-pulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 0.2; }
+}
+
+/* Disable caret blink during active typing */
+.typing-active .caret {
+  animation: none !important;
+  opacity: 1;
+}
+
+/* =============================================================================
+   Distraction-Free Mode (Active Typing)
+   ============================================================================= */
+
+.typing-active .fade-on-typing {
+  opacity: 0 !important;
+  pointer-events: none;
+  transition: opacity 400ms ease;
+}
+
+.fade-on-typing {
+  transition: opacity 400ms ease;
+}
+
+/* Dampen background during typing */
+.typing-active .liquid-orb {
+  opacity: 0.3;
+  transition: opacity 600ms ease;
+}
+
+/* =============================================================================
+   Scrollbar Styling
+   ============================================================================= */
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* =============================================================================
+   Font Family Classes
+   ============================================================================= */
+
+.font-jetbrains { font-family: var(--font-jetbrains-mono), 'JetBrains Mono', monospace; }
+.font-fira { font-family: var(--font-fira-code), 'Fira Code', monospace; }
+.font-roboto-mono { font-family: var(--font-roboto-mono), 'Roboto Mono', monospace; }
+.font-geist-mono { font-family: var(--font-geist-mono), 'Geist Mono', monospace; }
+
+/* Font Size Presets */
+.text-typing-small { font-size: 1.25rem; line-height: 2; }
+.text-typing-medium { font-size: 1.5rem; line-height: 2; }
+.text-typing-large { font-size: 1.875rem; line-height: 2; }
+
+/* =============================================================================
+   Base Body Styles
+   ============================================================================= */
+
+body {
+  background: var(--bg-canvas);
+  color: var(--text-untyped);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Prevent text selection in the typing area */
+.typing-arena {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* =============================================================================
+   Animations
+   ============================================================================= */
+
+@keyframes float-slow {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  25% { transform: translate(30px, -20px) scale(1.05); }
+  50% { transform: translate(-20px, 15px) scale(0.95); }
+  75% { transform: translate(15px, 25px) scale(1.02); }
+}
+
+@keyframes float-slower {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(-40px, 20px) scale(1.03); }
+  66% { transform: translate(25px, -30px) scale(0.97); }
+}
+
+.animate-float-slow {
+  animation: float-slow 20s ease-in-out infinite;
+}
+
+.animate-float-slower {
+  animation: float-slower 25s ease-in-out infinite;
+}
