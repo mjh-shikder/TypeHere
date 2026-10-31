@@ -21,7 +21,7 @@ sync your progress or climb the leaderboards.
 
 </div>
 
-> **Live app link:** Replace `https://your-live-url-here.example.com` in this
+> **Live app link:** Replace `https://type.mjhshikder.com/` in this
 > README with your deployment URL when it is available.
 
 ## ✨ Features
