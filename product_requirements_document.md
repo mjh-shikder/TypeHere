@@ -14,7 +14,7 @@
 
 Unlike conventional typing tests limited to 15 to 30 second sprints, TypeHere specializes in endurance and rhythm with **1-minute (default), 3-minute, and 5-minute** testing modes. The application captures keystroke telemetry to deliver **rich post-test analytics**, **ghost replay playback** (allowing users to watch their runs or race against their personal bests), and **global leaderboards**. All progress and stats are accessible to everyone—persisted via a lightweight `localStorage` summary schema for guest typists and automatically synced to PostgreSQL upon signing in.
 
-TypeHere prioritizes a frictionless user experience: users can start typing immediately without signing up (Guest Mode), with seamless data migration when authenticating via GitHub or Google (NextAuth / Auth.js v5).
+TypeHere prioritizes a frictionless user experience: users can start typing immediately without signing up (Guest Mode), with seamless data migration when authenticating via Google (NextAuth / Auth.js v5).
 
 ---
 
@@ -30,7 +30,7 @@ TypeHere prioritizes a frictionless user experience: users can start typing imme
 | **State Management** | **Zustand** | Ultra-lightweight client state for the real-time typing engine and settings. |
 | **Database** | **PostgreSQL (Neon / Supabase / Docker)** | Relational database ideal for structured test results, time-series metrics, and leaderboards. |
 | **ORM** | **Prisma ORM** | Type-safe queries, automated migrations, and schema modeling. |
-| **Authentication** | **Auth.js v5 (NextAuth)** | Passwordless OAuth (Google & GitHub) + Guest account sync support. |
+| **Authentication** | **Auth.js v5 (NextAuth)** | Google OAuth + Guest account sync support. |
 | **Data Visualization** | **Recharts** | Interactive charts for WPM progression, error spikes, and burst speeds over time. |
 
 ### 2.2 System Architecture Diagram
@@ -219,7 +219,7 @@ TypeHere provides a full profile and analytics dashboard to both guests and logg
   - Keeps the most recent 100 test summaries plus all-time Personal Bests for 60s, 180s, and 300s, keeping total `localStorage` usage well under $300\text{KB}$.
 - **Gentle Sign-Up Nudge (Rate-Limited Toast):**
   - Trigger Condition: When the app loads, if saved progress exists in `localStorage` AND the user is not authenticated.
-  - Toast Message: *"Want to save your progress across devices? Sign up."* (with quick Google / GitHub sign-in action button).
+  - Toast Message: *"Want to save your progress across devices? Sign up."* (with a quick Google sign-in action button).
   - Frequency Throttling: A timestamp (`typehere_nudge_last_shown`) ensures the nudge appears at most once every 48 hours.
 
 ---
@@ -261,7 +261,7 @@ Users can toggle between six curated liquid glass color themes without page relo
 1. **Guest Mode (Default):**
    - No login required to type, change themes, or view personal analytics.
 2. **Account Creation & Automatic Username Generation:**
-   - One-click sign-in with GitHub or Google via Auth.js v5.
+   - One-click sign-in with Google via Auth.js v5.
    - **Auto-Username Rule:** On first sign-in, if `user.username` is null, the server automatically generates a unique URL-safe username from the OAuth profile name or email prefix plus a 4-character random alphanumeric suffix (e.g., `alex_9f2a`), allowing the user to customize it later in settings.
 3. **Seamless Guest Migration:**
    - Upon sign-in, the client detects unlinked `LocalTestSummary[]` items in `localStorage`, syncs them to the user's PostgreSQL account via `syncGuestTestsAction`, and marks them as synced so they are never duplicated.
@@ -438,5 +438,5 @@ model TestResult {
 - [ ] On app load, if saved progress is found in `localStorage` without an active session, a rate-limited toast prompts: *"Want to save your progress across devices? Sign up."* (at most once every 48 hours).
 - [ ] After each test, an interactive Recharts graph displays Net WPM, Raw WPM, and error markers second-by-second.
 - [ ] Users can watch a full ghost replay of their completed run immediately after finishing a test.
-- [ ] Users can log in with GitHub/Google, get an auto-generated unique `username`, and have their local guest test summaries merged into their database profile.
+- [ ] Users can log in with Google, get an auto-generated unique `username`, and have their local guest test summaries merged into their database profile.
 - [ ] Global leaderboard displays verified, deduplicated rankings for 1 min, 3 min, and 5 min modes.

@@ -27,9 +27,9 @@ export default function GuestSignUpNudge() {
     setVisible(false);
   };
 
-  const handleProvider = (provider: 'google' | 'github') => {
+  const handleGoogleSignIn = () => {
     markNudgeShown();
-    void signIn(provider, { callbackUrl: '/' });
+    void signIn('google', { callbackUrl: '/' });
   };
 
   if (!visible || status === 'authenticated') return null;
@@ -43,18 +43,11 @@ export default function GuestSignUpNudge() {
           </p>
           <div className="flex gap-2 mt-3">
             <button
-              onClick={() => handleProvider('google')}
+              onClick={handleGoogleSignIn}
               className="glass-pill px-4 py-1.5 text-xs font-semibold"
               style={{ color: 'var(--accent-primary)' }}
             >
               Sign up with Google
-            </button>
-            <button
-              onClick={() => handleProvider('github')}
-              className="glass-pill px-4 py-1.5 text-xs font-semibold"
-              style={{ color: 'var(--text-untyped)' }}
-            >
-              GitHub
             </button>
           </div>
         </div>

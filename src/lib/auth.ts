@@ -1,6 +1,6 @@
 // =============================================================================
 // TypeHere — Auth.js v5 Configuration
-// OAuth providers: GitHub & Google
+// OAuth provider: Google
 // Auto-username generation on first sign-in
 // =============================================================================
 
@@ -9,7 +9,6 @@ import NextAuth, { type Session } from 'next-auth';
 if (!process.env.AUTH_URL && process.env.NEXT_PUBLIC_APP_URL) {
   process.env.AUTH_URL = process.env.NEXT_PUBLIC_APP_URL;
 }
-import GitHub from 'next-auth/providers/github';
 import Google from 'next-auth/providers/google';
 import { PrismaAdapter } from '@auth/prisma-adapter';
 import prisma from '@/lib/prisma';
@@ -19,10 +18,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
   trustHost: true,
   providers: [
-    GitHub({
-      clientId: process.env.AUTH_GITHUB_ID,
-      clientSecret: process.env.AUTH_GITHUB_SECRET,
-    }),
     Google({
       clientId: process.env.AUTH_GOOGLE_ID,
       clientSecret: process.env.AUTH_GOOGLE_SECRET,

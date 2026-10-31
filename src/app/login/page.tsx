@@ -3,7 +3,7 @@ import LoginPanel from '@/components/auth/LoginPanel';
 
 export const metadata: Metadata = {
   title: 'Sign In — TypeHere',
-  description: 'Sign in with Google or GitHub to sync your typing stats across devices.',
+  description: 'Sign in with Google to sync your typing stats across devices.',
 };
 
 export default function LoginPage() {
