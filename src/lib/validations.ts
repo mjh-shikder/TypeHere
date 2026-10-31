@@ -87,7 +87,7 @@ export const userSettingsSchema = z.object({
   fontSize: fontSizeSchema.optional(),
   cursorStyle: cursorStyleSchema.optional(),
   wordBankSize: wordBankSizeSchema.optional(),
-  username: z.string().min(3).max(24).regex(/^[a-z0-9_]+$/, {
+  username: z.string().trim().toLowerCase().min(3).max(24).regex(/^[a-z0-9_]+$/, {
     message: 'Username must be lowercase alphanumeric with underscores only',
   }).optional(),
   bio: z.string().max(160).optional(),

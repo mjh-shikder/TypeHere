@@ -13,6 +13,7 @@ import type {
 import { formatNumber } from '@/lib/utils';
 import { getPersonalBest } from '@/lib/local-storage';
 import GhostReplayModal from '@/components/typing/GhostReplayModal';
+import UserAvatar from '@/components/profile/UserAvatar';
 import { Trophy, Clock, Flame, Play } from 'lucide-react';
 
 const DURATION_OPTIONS: { value: TestDuration; label: string }[] = [
@@ -226,13 +227,15 @@ export default function LeaderboardTable() {
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
-                          {entry.image && (
-                            <img
-                              src={entry.image}
-                              alt=""
-                              className="w-7 h-7 rounded-full"
-                            />
-                          )}
+                          <UserAvatar
+                            src={
+                              entry.image
+                                ? `/api/users/${encodeURIComponent(entry.username)}/avatar`
+                                : null
+                            }
+                            name={entry.username}
+                            className="w-7 h-7"
+                          />
                           <Link
                             href={`/u/${entry.username}`}
                             className="text-sm font-medium hover:underline"

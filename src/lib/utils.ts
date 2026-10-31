@@ -21,7 +21,7 @@ export function generateId(): string {
 
 /**
  * Generate a URL-safe username from a name or email
- * e.g., "Alex Johnson" -> "alex_9f2a", "user@email.com" -> "user_3b1c"
+ * e.g., "Alex Johnson" -> "alex_johnson", "user@email.com" -> "user"
  */
 export function generateUsername(nameOrEmail: string): string {
   // Extract the base (name or email prefix)
@@ -35,14 +35,13 @@ export function generateUsername(nameOrEmail: string): string {
     .replace(/\s+/g, '_')
     .replace(/[^a-z0-9_]/g, '')
     .slice(0, 20);
+  base = base.replace(/^_+|_+$/g, '');
 
   // If base is empty after sanitization, use a fallback
   if (!base) base = 'typist';
+  if (base.length < 3) base = `${base}_ty`;
 
-  // Add 4-character random hex suffix
-  const suffix = Math.random().toString(16).slice(2, 6);
-
-  return `${base}_${suffix}`;
+  return base;
 }
 
 /**

@@ -5,6 +5,7 @@
 // =============================================================================
 
 import NextAuth, { type Session } from 'next-auth';
+import { randomUUID } from 'node:crypto';
 
 if (!process.env.AUTH_URL && process.env.NEXT_PUBLIC_APP_URL) {
   process.env.AUTH_URL = process.env.NEXT_PUBLIC_APP_URL;
@@ -60,23 +61,33 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (!user.id) return;
 
       const baseInput = user.name || user.email || 'typist';
-      let username = generateUsername(baseInput);
+      const baseUsername = generateUsername(baseInput);
 
-      // Ensure uniqueness by retrying if collision occurs
-      let attempts = 0;
-      while (attempts < 5) {
-        const existing = await prisma.user.findUnique({
-          where: { username },
-        });
-        if (!existing) break;
-        username = generateUsername(baseInput);
-        attempts++;
+      for (let attempt = 0; attempt < 10; attempt++) {
+        const username =
+          attempt === 0
+            ? baseUsername
+            : `${baseUsername.slice(0, 19)}_${randomUUID().replaceAll('-', '').slice(0, 4)}`;
+
+        try {
+          await prisma.user.update({
+            where: { id: user.id },
+            data: { username },
+          });
+          return;
+        } catch (error) {
+          if (
+            typeof error !== 'object' ||
+            error === null ||
+            !('code' in error) ||
+            error.code !== 'P2002'
+          ) {
+            throw error;
+          }
+        }
       }
 
-      await prisma.user.update({
-        where: { id: user.id },
-        data: { username },
-      });
+      throw new Error(`Could not assign a unique username to user ${user.id}`);
     },
   },
 });

@@ -78,14 +78,32 @@ const WordItem = React.memo(
   (prev, next) => {
     if (prev.isActive !== next.isActive) return false;
     if (prev.word === next.word) return true;
-    if (prev.word.isCompleted !== next.word.isCompleted) return false;
-    if (prev.word.extraCharacters.length !== next.word.extraCharacters.length) return false;
+    if (
+      prev.word.original !== next.word.original ||
+      prev.word.isCompleted !== next.word.isCompleted ||
+      prev.word.isCorrect !== next.word.isCorrect ||
+      prev.word.characters.length !== next.word.characters.length ||
+      prev.word.extraCharacters.length !== next.word.extraCharacters.length
+    ) {
+      return false;
+    }
 
     for (let i = 0; i < prev.word.characters.length; i++) {
-      if (prev.word.characters[i].status !== next.word.characters[i].status) return false;
+      if (
+        prev.word.characters[i].expected !== next.word.characters[i].expected ||
+        prev.word.characters[i].status !== next.word.characters[i].status
+      ) {
+        return false;
+      }
       if (prev.word.characters[i].typed !== next.word.characters[i].typed) return false;
     }
     for (let i = 0; i < prev.word.extraCharacters.length; i++) {
+      if (
+        prev.word.extraCharacters[i].expected !== next.word.extraCharacters[i].expected ||
+        prev.word.extraCharacters[i].status !== next.word.extraCharacters[i].status
+      ) {
+        return false;
+      }
       if (prev.word.extraCharacters[i].typed !== next.word.extraCharacters[i].typed) return false;
     }
 

@@ -262,7 +262,7 @@ Users can toggle between six curated liquid glass color themes without page relo
    - No login required to type, change themes, or view personal analytics.
 2. **Account Creation & Automatic Username Generation:**
    - One-click sign-in with Google via Auth.js v5.
-   - **Auto-Username Rule:** On first sign-in, if `user.username` is null, the server automatically generates a unique URL-safe username from the OAuth profile name or email prefix plus a 4-character random alphanumeric suffix (e.g., `alex_9f2a`), allowing the user to customize it later in settings.
+   - **Auto-Username Rule:** On first sign-in, if `user.username` is null, the server generates a URL-safe username from the OAuth profile name or email prefix. A 4-character random suffix is added only if the base username is already taken. Users can change their username later in profile settings.
 3. **Seamless Guest Migration:**
    - Upon sign-in, the client detects unlinked `LocalTestSummary[]` items in `localStorage`, syncs them to the user's PostgreSQL account via `syncGuestTestsAction`, and marks them as synced so they are never duplicated.
 

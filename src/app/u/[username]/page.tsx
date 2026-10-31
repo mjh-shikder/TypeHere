@@ -2,10 +2,12 @@
 // TypeHere — Public User Profile Page
 // =============================================================================
 
+import { Suspense } from 'react';
 import { notFound } from 'next/navigation';
 import prisma from '@/lib/prisma';
 import { formatNumber, formatDuration } from '@/lib/utils';
 import { Trophy, Clock, Target, Zap } from 'lucide-react';
+import UserAvatar from '@/components/profile/UserAvatar';
 
 export async function generateMetadata({
   params,
@@ -19,7 +21,7 @@ export async function generateMetadata({
   };
 }
 
-export default async function PublicProfilePage({
+async function PublicProfileContent({
   params,
 }: {
   params: Promise<{ username: string }>;
@@ -84,13 +86,11 @@ export default async function PublicProfilePage({
     <div className="max-w-4xl mx-auto px-4 space-y-8">
       {/* User Header */}
       <div className="glass-panel rounded-2xl p-8 text-center">
-        {user.image && (
-          <img
-            src={user.image}
-            alt={user.username || ''}
-            className="w-20 h-20 rounded-full mx-auto mb-4"
-          />
-        )}
+        <UserAvatar
+          src={user.image ? `/api/users/${encodeURIComponent(user.username ?? '')}/avatar` : null}
+          name={user.name || user.username || 'User'}
+          className="w-20 h-20 mx-auto mb-4"
+        />
         <h1 className="text-2xl font-bold mb-1" style={{ color: 'var(--text-untyped)' }}>
           {user.name || user.username}
         </h1>
@@ -210,5 +210,25 @@ export default async function PublicProfilePage({
         </div>
       )}
     </div>
+  );
+}
+
+export default function PublicProfilePage({
+  params,
+}: {
+  params: Promise<{ username: string }>;
+}) {
+  return (
+    <Suspense
+      fallback={
+        <div className="max-w-4xl mx-auto px-4">
+          <div className="glass-panel rounded-2xl p-8 text-center" role="status">
+            <p style={{ color: 'var(--text-typed)' }}>Loading profile...</p>
+          </div>
+        </div>
+      }
+    >
+      <PublicProfileContent params={params} />
+    </Suspense>
   );
 }

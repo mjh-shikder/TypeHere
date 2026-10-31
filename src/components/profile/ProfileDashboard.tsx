@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { useSession } from 'next-auth/react';
+import Link from 'next/link';
 import type { LocalTestSummary, TestDuration } from '@/types/typing';
 import { getStoredTests, getAllPersonalBests } from '@/lib/local-storage';
 import { formatNumber, formatDuration } from '@/lib/utils';
@@ -22,7 +23,7 @@ import { Trophy, Clock, Target, Zap } from 'lucide-react';
  * Works for both Guest (localStorage) and authenticated (DB) users
  */
 export default function ProfileDashboard() {
-  const { data: session, status } = useSession();
+  const { data: session, status, update } = useSession();
   const [tests, setTests] = useState<LocalTestSummary[]>([]);
   const [personalBests, setPersonalBests] = useState<Record<TestDuration, LocalTestSummary | null>>({
     60: null,
@@ -32,6 +33,7 @@ export default function ProfileDashboard() {
   const [username, setUsername] = useState('');
   const [bio, setBio] = useState('');
   const [settingsMessage, setSettingsMessage] = useState<string | null>(null);
+  const [savingProfile, setSavingProfile] = useState(false);
 
   useEffect(() => {
     setTests(getStoredTests());
@@ -142,15 +144,26 @@ export default function ProfileDashboard() {
 
   const handleSaveProfile = async () => {
     setSettingsMessage(null);
-    const result = await updateUserSettingsAction({
-      username: username || undefined,
-      bio,
-    });
-    if (result.error) {
-      setSettingsMessage(result.error);
-      return;
+    setSavingProfile(true);
+    try {
+      const result = await updateUserSettingsAction({
+        username: username || undefined,
+        bio,
+      });
+      if (result.error) {
+        setSettingsMessage(result.error);
+        return;
+      }
+
+      if (result.username) setUsername(result.username);
+      await update();
+      setSettingsMessage('Profile saved.');
+    } catch (error) {
+      console.error('Failed to save profile settings:', error);
+      setSettingsMessage('Could not save your profile. Please try again.');
+    } finally {
+      setSavingProfile(false);
     }
-    setSettingsMessage('Profile saved.');
   };
 
   return (
@@ -169,6 +182,9 @@ export default function ProfileDashboard() {
               maxLength={24}
             />
           </label>
+          <p className="text-xs" style={{ color: 'var(--text-typed)' }}>
+            Your public profile address uses this name. Use 3–24 lowercase letters, numbers, or underscores.
+          </p>
           <label className="block">
             <span className="text-xs" style={{ color: 'var(--text-typed)' }}>Bio</span>
             <textarea
@@ -180,11 +196,21 @@ export default function ProfileDashboard() {
           </label>
           <button
             onClick={() => void handleSaveProfile()}
+            disabled={savingProfile}
             className="glass-pill px-4 py-2 text-sm"
             style={{ color: 'var(--accent-primary)' }}
           >
-            Save profile
+            {savingProfile ? 'Saving...' : 'Save profile'}
           </button>
+          {username && (
+            <Link
+              href={`/u/${encodeURIComponent(username)}`}
+              className="glass-pill inline-flex px-4 py-2 text-sm"
+              style={{ color: 'var(--text-untyped)' }}
+            >
+              View public profile
+            </Link>
+          )}
           {settingsMessage && (
             <p className="text-xs" style={{ color: 'var(--text-typed)' }}>
               {settingsMessage}

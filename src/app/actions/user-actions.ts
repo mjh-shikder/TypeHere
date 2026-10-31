@@ -27,8 +27,16 @@ export async function updateUserSettingsAction(settings: UserSettingsDTO) {
 
   const validated = parsed.data;
 
+  let currentUsername: string | null = null;
+
   // If username is being changed, check uniqueness
   if (validated.username) {
+    const currentUser = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { username: true },
+    });
+    currentUsername = currentUser?.username ?? null;
+
     const existing = await prisma.user.findUnique({
       where: { username: validated.username },
     });
@@ -39,7 +47,7 @@ export async function updateUserSettingsAction(settings: UserSettingsDTO) {
   }
 
   try {
-    await prisma.user.update({
+    const updatedUser = await prisma.user.update({
       where: { id: session.user.id },
       data: {
         ...(validated.theme && { theme: validated.theme }),
@@ -50,13 +58,17 @@ export async function updateUserSettingsAction(settings: UserSettingsDTO) {
         ...(validated.username && { username: validated.username }),
         ...(validated.bio !== undefined && { bio: validated.bio }),
       },
+      select: { username: true },
     });
 
     revalidatePath('/profile');
-    if (validated.username) {
-      revalidatePath(`/u/${validated.username}`);
+    if (currentUsername && currentUsername !== updatedUser.username) {
+      revalidatePath(`/u/${currentUsername}`);
     }
-    return { success: true };
+    if (updatedUser.username) {
+      revalidatePath(`/u/${updatedUser.username}`);
+    }
+    return { success: true, username: updatedUser.username };
   } catch (error) {
     console.error('Failed to update settings:', error);
     return { error: 'Failed to update settings' };

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import { useTypingStore } from '@/store/useTypingStore';
 import { updateUserSettingsAction } from '@/app/actions/user-actions';
@@ -49,8 +49,22 @@ export default function FloatingNavbar() {
   const setCursorStyle = useTypingStore((s) => s.setCursorStyle);
   const setWordBankSize = useTypingStore((s) => s.setWordBankSize);
   const [showSettings, setShowSettings] = useState(false);
+  const settingsRef = useRef<HTMLDivElement>(null);
   const isTyping = phase === 'typing';
   const isAuthed = status === 'authenticated' && Boolean(session?.user);
+
+  useEffect(() => {
+    if (!showSettings) return;
+
+    const handlePointerDown = (event: PointerEvent) => {
+      if (event.target instanceof Node && !settingsRef.current?.contains(event.target)) {
+        setShowSettings(false);
+      }
+    };
+
+    document.addEventListener('pointerdown', handlePointerDown);
+    return () => document.removeEventListener('pointerdown', handlePointerDown);
+  }, [showSettings]);
 
   const persistRemote = (settings: Parameters<typeof updateUserSettingsAction>[0]) => {
     if (isAuthed) {
@@ -109,7 +123,7 @@ export default function FloatingNavbar() {
 
         <div className="w-px h-6" style={{ background: 'var(--glass-border)' }} />
 
-        <div className="relative">
+        <div className="relative" ref={settingsRef}>
           <button
             onClick={() => setShowSettings(!showSettings)}
             className="glass-pill p-2 flex items-center gap-2"
@@ -126,7 +140,7 @@ export default function FloatingNavbar() {
           </button>
 
           {showSettings && (
-            <div className="absolute top-full right-0 mt-2 glass-panel rounded-xl p-3 min-w-[240px] space-y-3">
+            <div className="absolute top-full right-0 mt-2 glass-panel backdrop-blur-xl rounded-xl p-3 min-w-[240px] space-y-3">
               <p className="text-xs font-medium px-1" style={{ color: 'var(--text-typed)' }}>
                 Theme
               </p>
@@ -136,6 +150,7 @@ export default function FloatingNavbar() {
                   onClick={() => {
                     setTheme(t.id);
                     persistRemote({ theme: t.id });
+                    setShowSettings(false);
                   }}
                   className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
                     theme === t.id ? 'bg-white/10' : 'hover:bg-white/5'
@@ -166,6 +181,7 @@ export default function FloatingNavbar() {
                     onClick={() => {
                       setFontFamily(font);
                       persistRemote({ fontFamily: font });
+                      setShowSettings(false);
                     }}
                     className="glass-pill px-2 py-1 text-[11px]"
                     data-active={fontFamily === font}
@@ -186,6 +202,7 @@ export default function FloatingNavbar() {
                     onClick={() => {
                       setFontSize(size.id);
                       persistRemote({ fontSize: size.id });
+                      setShowSettings(false);
                     }}
                     className="glass-pill px-3 py-1 text-xs"
                     data-active={fontSize === size.id}
@@ -206,6 +223,7 @@ export default function FloatingNavbar() {
                     onClick={() => {
                       setCursorStyle(cursor.id);
                       persistRemote({ cursorStyle: cursor.id });
+                      setShowSettings(false);
                     }}
                     className="glass-pill px-3 py-1 text-xs"
                     data-active={cursorStyle === cursor.id}
@@ -226,6 +244,7 @@ export default function FloatingNavbar() {
                     onClick={() => {
                       setWordBankSize(size);
                       persistRemote({ wordBankSize: size });
+                      setShowSettings(false);
                     }}
                     className="glass-pill px-3 py-1 text-xs"
                     data-active={wordBankSize === size}
