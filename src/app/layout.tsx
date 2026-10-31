@@ -35,10 +35,64 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'TypeHere — Typing Speed & Stamina Platform',
+  metadataBase: new URL('https://type.mjhshikder.com'),
+  applicationName: 'TypeHere',
+  title: {
+    default: 'TypeHere — Free Typing Practice',
+    template: '%s | TypeHere',
+  },
   description:
-    'Test and improve your typing speed, precision, and endurance with 1-minute, 3-minute, and 5-minute modes. Rich analytics, ghost replays, and global leaderboards.',
-  keywords: ['typing test', 'typing speed', 'wpm', 'typing practice', 'typing game'],
+    'Practice typing for free with 1, 3, and 5-minute tests. Improve your speed, accuracy, and stamina with detailed stats, replays, and leaderboards.',
+  keywords: [
+    'free typing practice',
+    'typing test',
+    'typing speed test',
+    'typing accuracy',
+    'WPM test',
+    'typing stamina',
+    'online typing practice',
+  ],
+  alternates: {
+    canonical: '/',
+  },
+  openGraph: {
+    type: 'website',
+    locale: 'en_US',
+    url: 'https://type.mjhshikder.com',
+    siteName: 'TypeHere',
+    title: 'TypeHere — Free Typing Practice',
+    description:
+      'Build typing speed, accuracy, and stamina with free timed tests, detailed analytics, replays, and global leaderboards.',
+    images: [
+      {
+        url: 'https://i.ibb.co.com/WWtP92jL/type-Here.png',
+        alt: 'TypeHere — free typing practice',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'TypeHere — Free Typing Practice',
+    description:
+      'Build typing speed, accuracy, and stamina with free timed tests, detailed analytics, replays, and global leaderboards.',
+    images: [
+      {
+        url: 'https://i.ibb.co.com/WWtP92jL/type-Here.png',
+        alt: 'TypeHere — free typing practice',
+      },
+    ],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+      'max-video-preview': -1,
+    },
+  },
 };
 
 export default function RootLayout({
