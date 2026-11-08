@@ -39,7 +39,7 @@ export async function GET(
       [60, 180, 300].map(async (duration) => {
         const best = await prisma.testResult.findFirst({
           where: { userId: user.id, duration, isVerified: true },
-          orderBy: { wpm: 'desc' },
+          orderBy: { rawWpm: 'desc' },
           select: {
             wpm: true,
             rawWpm: true,
@@ -58,7 +58,7 @@ export async function GET(
       where: { userId: user.id },
       _count: true,
       _sum: { duration: true },
-      _avg: { wpm: true, accuracy: true },
+      _avg: { rawWpm: true, accuracy: true },
     });
 
     // Recent tests (last 20)
@@ -89,7 +89,7 @@ export async function GET(
       stats: {
         totalTests: aggregates._count,
         totalTime: aggregates._sum.duration || 0,
-        avgWpm: aggregates._avg.wpm || 0,
+        avgWpm: aggregates._avg.rawWpm || 0,
         avgAccuracy: aggregates._avg.accuracy || 0,
       },
       recentTests: recentTests.map((t) => ({

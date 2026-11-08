@@ -48,7 +48,7 @@ async function PublicProfileContent({
     [60, 180, 300].map(async (duration) => {
       const best = await prisma.testResult.findFirst({
         where: { user: { username }, duration, isVerified: true },
-        orderBy: { wpm: 'desc' },
+        orderBy: { rawWpm: 'desc' },
         select: {
           wpm: true,
           rawWpm: true,
@@ -65,7 +65,7 @@ async function PublicProfileContent({
     where: { user: { username } },
     _count: true,
     _sum: { duration: true },
-    _avg: { wpm: true, accuracy: true },
+    _avg: { rawWpm: true, accuracy: true },
   });
 
   // Recent tests
@@ -76,7 +76,7 @@ async function PublicProfileContent({
     select: {
       id: true,
       duration: true,
-      wpm: true,
+      rawWpm: true,
       accuracy: true,
       createdAt: true,
     },
@@ -123,13 +123,13 @@ async function PublicProfileContent({
                   className="text-4xl font-bold tabular-nums mb-1"
                   style={{ color: 'var(--accent-primary)' }}
                 >
-                  {Math.round(best.wpm)}{' '}
+                  {Math.round(best.rawWpm)}{' '}
                   <span className="text-lg font-normal" style={{ color: 'var(--text-typed)' }}>
                     wpm
                   </span>
                 </p>
                 <p className="text-sm" style={{ color: 'var(--text-typed)' }}>
-                  {formatNumber(best.accuracy)}% acc · {formatNumber(best.consistency)}% con
+                  {formatNumber(best.accuracy)}% accuracy
                 </p>
               </>
             ) : (
@@ -158,7 +158,7 @@ async function PublicProfileContent({
         <div className="glass-panel rounded-xl p-4 text-center">
           <Target className="w-4 h-4 mx-auto mb-2" style={{ color: 'var(--accent-primary)' }} />
           <p className="text-2xl font-bold" style={{ color: 'var(--text-untyped)' }}>
-            {Math.round(aggregates._avg.wpm || 0)}
+            {Math.round(aggregates._avg.rawWpm || 0)}
           </p>
           <p className="text-xs" style={{ color: 'var(--text-typed)' }}>Avg WPM</p>
         </div>
@@ -190,7 +190,7 @@ async function PublicProfileContent({
                   className="text-lg font-bold tabular-nums"
                   style={{ color: 'var(--accent-primary)' }}
                 >
-                  {Math.round(test.wpm)}
+                  {Math.round(test.rawWpm)}
                 </span>
                 <span className="text-xs" style={{ color: 'var(--text-typed)' }}>wpm</span>
               </div>

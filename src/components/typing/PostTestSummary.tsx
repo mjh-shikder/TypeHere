@@ -59,8 +59,7 @@ export default function PostTestSummary() {
   const chartData = useMemo(() => {
     return timeline.map((point) => ({
       second: point.second,
-      wpm: Math.round(point.wpm),
-      rawWpm: Math.round(point.rawWpm),
+      wpm: Math.round(point.rawWpm),
       errors: point.errors > 0 ? point.rawWpm : null,
     }));
   }, [timeline]);
@@ -78,8 +77,7 @@ export default function PostTestSummary() {
 
   const handleShare = () => {
     const text = `TypeHere Result 🎯\n` +
-      `WPM: ${formatNumber(summary.wpm, 0)} | Accuracy: ${formatNumber(summary.accuracy)}%\n` +
-      `Raw WPM: ${formatNumber(summary.rawWpm, 0)} | Consistency: ${formatNumber(summary.consistency)}%\n` +
+      `WPM: ${formatNumber(summary.rawWpm, 0)} | Accuracy: ${formatNumber(summary.accuracy)}%\n` +
       `Duration: ${formatDuration(summary.duration)}\n` +
       `Characters: ${summary.charactersCorrect}✓ / ${summary.charactersWrong}✗ / ${summary.charactersExtra}+ / ${summary.charactersMissed}⊘`;
 
@@ -90,17 +88,17 @@ export default function PostTestSummary() {
     <div className="w-full max-w-4xl mx-auto px-4 space-y-8">
       {/* Headline Metrics */}
       <div className="glass-panel rounded-2xl p-8">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-6 md:gap-8">
           {/* Primary: WPM */}
           <div className="col-span-2 md:col-span-1 text-center md:text-left">
             <p className="text-sm font-medium mb-1" style={{ color: 'var(--text-typed)' }}>
-              Net WPM
+              WPM
             </p>
             <p
               className="text-6xl font-bold tabular-nums"
               style={{ color: 'var(--accent-primary)' }}
             >
-              {Math.round(summary.wpm)}
+              {Math.round(summary.rawWpm)}
             </p>
           </div>
 
@@ -117,42 +115,23 @@ export default function PostTestSummary() {
             </p>
           </div>
 
-          {/* Secondary: Raw WPM */}
+          {/* Correct Characters */}
           <div className="text-center md:text-left">
             <p className="text-sm font-medium mb-1" style={{ color: 'var(--text-typed)' }}>
-              Raw WPM
+              Correct Characters
             </p>
             <p
-              className="text-2xl font-semibold tabular-nums"
-              style={{ color: 'var(--text-typed)' }}
+              className="text-4xl font-bold tabular-nums"
+              style={{ color: '#4ade80' }}
             >
-              {Math.round(summary.rawWpm)}
+              {summary.charactersCorrect}
             </p>
           </div>
 
-          {/* Secondary: Consistency */}
-          <div className="text-center md:text-left">
-            <p className="text-sm font-medium mb-1" style={{ color: 'var(--text-typed)' }}>
-              Consistency
-            </p>
-            <p
-              className="text-2xl font-semibold tabular-nums"
-              style={{ color: 'var(--text-typed)' }}
-            >
-              {formatNumber(summary.consistency)}%
-            </p>
-          </div>
         </div>
 
         {/* Character Breakdown */}
         <div className="flex items-center justify-center gap-6 mt-6 pt-6" style={{ borderTop: '1px solid var(--glass-border)' }}>
-          <div className="flex items-center gap-1.5">
-            <span className="text-xs" style={{ color: 'var(--text-typed)' }}>Correct</span>
-            <span className="text-sm font-semibold" style={{ color: '#4ade80' }}>
-              {summary.charactersCorrect}
-            </span>
-          </div>
-          <div className="text-xs" style={{ color: 'var(--glass-border)' }}>/</div>
           <div className="flex items-center gap-1.5">
             <span className="text-xs" style={{ color: 'var(--text-typed)' }}>Incorrect</span>
             <span className="text-sm font-semibold" style={{ color: 'var(--text-error)' }}>
@@ -230,24 +209,14 @@ export default function PostTestSummary() {
                 }}
                 labelFormatter={(value) => `Second ${value}`}
               />
-              {/* Net WPM Line */}
+              {/* WPM Line */}
               <Line
                 type="monotone"
                 dataKey="wpm"
                 stroke="var(--accent-primary)"
                 strokeWidth={2}
                 dot={false}
-                name="Net WPM"
-              />
-              {/* Raw WPM Dashed Line */}
-              <Line
-                type="monotone"
-                dataKey="rawWpm"
-                stroke="var(--text-typed)"
-                strokeWidth={1.5}
-                strokeDasharray="5 5"
-                dot={false}
-                name="Raw WPM"
+                name="WPM"
               />
               {/* Error Markers */}
               <Scatter

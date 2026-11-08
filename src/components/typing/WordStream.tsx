@@ -166,6 +166,7 @@ export default function WordStream() {
     >
       <div
         ref={wrapRef}
+        data-word-stream
         className="flex flex-wrap leading-[2] will-change-transform"
         style={{
           transform: `translate3d(0, ${-shiftPx}px, 0)`,

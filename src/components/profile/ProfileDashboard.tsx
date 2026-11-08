@@ -64,11 +64,11 @@ export default function ProfileDashboard() {
           300: null,
         };
         for (const pb of data.personalBests ?? []) {
-          if (pb?.wpm && (pb.duration === 60 || pb.duration === 180 || pb.duration === 300)) {
+          if (pb?.rawWpm && (pb.duration === 60 || pb.duration === 180 || pb.duration === 300)) {
             nextPBs[pb.duration as TestDuration] = {
               id: `${pb.duration}-pb`,
               duration: pb.duration,
-              wpm: pb.wpm,
+              wpm: pb.rawWpm,
               rawWpm: pb.rawWpm ?? 0,
               accuracy: pb.accuracy ?? 0,
               consistency: pb.consistency ?? 0,
@@ -122,7 +122,7 @@ export default function ProfileDashboard() {
 
     const totalTests = tests.length;
     const totalTime = tests.reduce((sum, t) => sum + t.duration, 0);
-    const avgWpm = tests.reduce((sum, t) => sum + t.wpm, 0) / totalTests;
+    const avgWpm = tests.reduce((sum, t) => sum + t.rawWpm, 0) / totalTests;
     const avgAccuracy = tests.reduce((sum, t) => sum + t.accuracy, 0) / totalTests;
 
     return { totalTests, totalTime, avgWpm, avgAccuracy };
@@ -135,7 +135,7 @@ export default function ProfileDashboard() {
       .reverse()
       .map((t, i) => ({
         test: i + 1,
-        wpm: Math.round(t.wpm),
+        wpm: Math.round(t.rawWpm),
         accuracy: Math.round(t.accuracy),
       }));
   }, [tests]);
@@ -237,10 +237,10 @@ export default function ProfileDashboard() {
                     className="text-4xl font-bold tabular-nums mb-1"
                     style={{ color: 'var(--accent-primary)' }}
                   >
-                    {Math.round(pb.wpm)} <span className="text-lg font-normal" style={{ color: 'var(--text-typed)' }}>wpm</span>
+                    {Math.round(pb.rawWpm)} <span className="text-lg font-normal" style={{ color: 'var(--text-typed)' }}>wpm</span>
                   </p>
                   <p className="text-sm" style={{ color: 'var(--text-typed)' }}>
-                    {formatNumber(pb.accuracy)}% accuracy · {formatNumber(pb.consistency)}% consistency
+                    {formatNumber(pb.accuracy)}% accuracy
                   </p>
                 </div>
               ) : (
@@ -351,7 +351,7 @@ export default function ProfileDashboard() {
                     className="text-lg font-bold tabular-nums"
                     style={{ color: 'var(--accent-primary)' }}
                   >
-                    {Math.round(test.wpm)}
+                    {Math.round(test.rawWpm)}
                   </span>
                   <span className="text-xs" style={{ color: 'var(--text-typed)' }}>
                     wpm

@@ -22,7 +22,7 @@ export default function LeaderboardPage() {
           </h1>
         </div>
         <p className="text-sm" style={{ color: 'var(--text-typed)' }}>
-          Top verified typists worldwide — ranked by Net WPM
+          Top verified typists worldwide — ranked by WPM
         </p>
       </div>
 

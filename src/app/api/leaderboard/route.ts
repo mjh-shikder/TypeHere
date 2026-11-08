@@ -48,7 +48,7 @@ export async function GET(request: NextRequest) {
         ...dateFilter,
       },
       orderBy: [
-        { wpm: 'desc' },
+        { rawWpm: 'desc' },
         { accuracy: 'desc' },
       ],
       include: {

@@ -135,10 +135,15 @@ export function getAllPersonalBests(): Record<TestDuration, LocalTestSummary | n
  * Update personal best if the new test beats the current PB
  */
 function updatePersonalBest(test: LocalTestSummary): void {
-  const currentPB = getPersonalBest(test.duration);
-  
-  if (!currentPB || test.wpm > currentPB.wpm) {
-    localStorage.setItem(`${PB_KEY_PREFIX}${test.duration}`, JSON.stringify(test));
+  const best = getStoredTests()
+    .filter((storedTest) => storedTest.duration === test.duration)
+    .reduce<LocalTestSummary | null>(
+      (current, storedTest) => !current || storedTest.rawWpm > current.rawWpm ? storedTest : current,
+      null
+    );
+
+  if (best) {
+    localStorage.setItem(`${PB_KEY_PREFIX}${test.duration}`, JSON.stringify(best));
   }
 }
 

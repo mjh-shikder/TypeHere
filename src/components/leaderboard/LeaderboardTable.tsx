@@ -85,8 +85,8 @@ export default function LeaderboardTable() {
     let rank = 1;
     for (const entry of entries) {
       if (
-        entry.wpm > guestPb.wpm ||
-        (entry.wpm === guestPb.wpm && entry.accuracy > guestPb.accuracy)
+        entry.rawWpm > guestPb.rawWpm ||
+        (entry.rawWpm === guestPb.rawWpm && entry.accuracy > guestPb.accuracy)
       ) {
         rank += 1;
       } else {
@@ -172,7 +172,6 @@ export default function LeaderboardTable() {
               <th className="text-left text-xs font-medium px-6 py-4" style={{ color: 'var(--text-typed)' }}>User</th>
               <th className="text-right text-xs font-medium px-6 py-4" style={{ color: 'var(--text-typed)' }}>WPM</th>
               <th className="text-right text-xs font-medium px-6 py-4 hidden sm:table-cell" style={{ color: 'var(--text-typed)' }}>Accuracy</th>
-              <th className="text-right text-xs font-medium px-6 py-4 hidden md:table-cell" style={{ color: 'var(--text-typed)' }}>Consistency</th>
               <th className="text-right text-xs font-medium px-6 py-4" style={{ color: 'var(--text-typed)' }}>Replay</th>
             </tr>
           </thead>
@@ -193,14 +192,11 @@ export default function LeaderboardTable() {
                   <td className="px-6 py-4 hidden sm:table-cell">
                     <div className="w-16 h-4 rounded bg-white/5 animate-pulse ml-auto" />
                   </td>
-                  <td className="px-6 py-4 hidden md:table-cell">
-                    <div className="w-16 h-4 rounded bg-white/5 animate-pulse ml-auto" />
-                  </td>
                 </tr>
               ))
             ) : entries.length === 0 && !guestPb ? (
               <tr>
-                <td colSpan={6} className="px-6 py-16 text-center">
+                <td colSpan={5} className="px-6 py-16 text-center">
                   <p className="text-sm" style={{ color: 'var(--text-typed)' }}>
                     No results yet. Be the first to set a record!
                   </p>
@@ -213,9 +209,8 @@ export default function LeaderboardTable() {
                     {guestPb && guestRank === entry.rank && (
                       <GuestComparisonRow
                         rank={guestRank}
-                        wpm={guestPb.wpm}
+                        wpm={guestPb.rawWpm}
                         accuracy={guestPb.accuracy}
-                        consistency={guestPb.consistency}
                       />
                     )}
                     <tr
@@ -249,19 +244,13 @@ export default function LeaderboardTable() {
                         className="px-6 py-4 text-right text-sm font-bold tabular-nums"
                         style={{ color: 'var(--accent-primary)' }}
                       >
-                        {Math.round(entry.wpm)}
+                        {Math.round(entry.rawWpm)}
                       </td>
                       <td
                         className="px-6 py-4 text-right text-sm tabular-nums hidden sm:table-cell"
                         style={{ color: 'var(--text-untyped)' }}
                       >
                         {formatNumber(entry.accuracy)}%
-                      </td>
-                      <td
-                        className="px-6 py-4 text-right text-sm tabular-nums hidden md:table-cell"
-                        style={{ color: 'var(--text-typed)' }}
-                      >
-                        {formatNumber(entry.consistency)}%
                       </td>
                       <td className="px-6 py-4 text-right">
                         <button
@@ -278,9 +267,8 @@ export default function LeaderboardTable() {
                 {guestPb && guestRank !== null && (entries.length === 0 || guestRank > entries.length) && (
                   <GuestComparisonRow
                     rank={guestRank}
-                    wpm={guestPb.wpm}
+                    wpm={guestPb.rawWpm}
                     accuracy={guestPb.accuracy}
-                    consistency={guestPb.consistency}
                     belowFold={entries.length > 0 && guestRank > entries.length}
                   />
                 )}
@@ -342,13 +330,11 @@ function GuestComparisonRow({
   rank,
   wpm,
   accuracy,
-  consistency,
   belowFold = false,
 }: {
   rank: number;
   wpm: number;
   accuracy: number;
-  consistency: number;
   belowFold?: boolean;
 }) {
   return (
@@ -371,9 +357,6 @@ function GuestComparisonRow({
       </td>
       <td className="px-6 py-4 text-right text-sm tabular-nums hidden sm:table-cell" style={{ color: 'var(--text-untyped)' }}>
         {formatNumber(accuracy)}%
-      </td>
-      <td className="px-6 py-4 text-right text-sm tabular-nums hidden md:table-cell" style={{ color: 'var(--text-typed)' }}>
-        {formatNumber(consistency)}%
       </td>
       <td />
     </tr>
