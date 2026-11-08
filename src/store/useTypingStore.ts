@@ -66,7 +66,7 @@ export interface TypingState {
   // --- Per-Second Tracking ---
   errorsThisSecond: number;
 
-  // --- Ghost Replay ---
+  // --- Completed Test Telemetry & Summary ---
   lastCompletedTelemetry: TestTelemetry | null;
   lastCompletedSummary: LocalTestSummary | null;
 

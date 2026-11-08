@@ -30,7 +30,15 @@ sync your progress or climb the leaderboards.
 | --- | --- | --- |
 | **1, 3, or 5-minute** typing tests | Net/raw WPM, accuracy, and consistency | Daily, weekly, and all-time leaderboards |
 | Guest mode with browser-saved personal bests | Per-second performance chart | Public profiles and account history |
-| Themes, fonts, cursor, and word-bank settings | Keystroke replay and personal-best ghost pace | Google sign-in and guest progress sync |
+| Themes, fonts, cursor, and word-bank settings | Keystroke analytics and personal-best ghost pace | Google sign-in and guest progress sync |
+
+### 👻 Ghost PB (Personal Best) Pacer
+
+Whenever you have a recorded personal best for the selected test duration (`1m`, `3m`, or `5m`), a **Ghost PB** toggle button appears above the typing arena:
+
+- **Live Pacing**: Displays a secondary, semi-transparent ghost cursor that moves through the text at the exact speed and rhythm of your personal best run.
+- **Race Yourself**: Gives instant visual feedback during the test—type ahead of the ghost cursor to know you are on track to beat your record.
+- **Toggle Anytime**: Can be toggled on or off at will depending on whether you want a target to race against or a distraction-free typing session.
 
 ## 🧰 Tech stack
 
@@ -157,8 +165,8 @@ prisma/
 Guest test summaries and personal bests are stored in the browser's
 `localStorage`; they are not automatically available on other devices. Signing
 in enables account-backed progress and leaderboard submissions. Guest summaries
-can be synced to an account, but guest-synced tests do not include the full
-keystroke telemetry required for replay.
+can be synced to an account, but guest-synced tests do not include raw
+keystroke telemetry.
 
 ## 🤝 Contributing
 

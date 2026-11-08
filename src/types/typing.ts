@@ -43,7 +43,7 @@ export interface PerSecondStat {
   charIndex: number;  // Total character index reached (powers Ghost Pace cursor)
 }
 
-/** Full keystroke event (kept in Zustand memory for replay & DB for logged-in) */
+/** Full keystroke event (kept in Zustand memory & DB for logged-in runs) */
 export interface KeystrokeEvent {
   t: number;   // Offset in milliseconds from test start
   k: string;   // Key pressed or action ('Backspace', 'Space', 'ClearWord')
@@ -146,19 +146,6 @@ export interface LeaderboardResponse {
   totalCount: number;
   page: number;
   limit: number;
-}
-
-// -----------------------------------------------------------------------------
-// Ghost Replay Types
-// -----------------------------------------------------------------------------
-
-export type ReplaySpeed = 1 | 1.5 | 2;
-
-export interface ReplayState {
-  isPlaying: boolean;
-  currentTime: number;     // ms offset from start
-  speed: ReplaySpeed;
-  telemetry: TestTelemetry | null;
 }
 
 // -----------------------------------------------------------------------------

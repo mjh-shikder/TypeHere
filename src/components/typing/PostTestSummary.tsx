@@ -4,7 +4,6 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTypingStore } from '@/store/useTypingStore';
 import { formatNumber, formatDuration } from '@/lib/utils';
 import { calculateActiveTypingSeconds } from '@/lib/metrics';
-import GhostReplayModal from './GhostReplayModal';
 import {
   LineChart,
   Line,
@@ -16,7 +15,7 @@ import {
   Scatter,
   ComposedChart,
 } from 'recharts';
-import { RotateCcw, Play, Share2 } from 'lucide-react';
+import { RotateCcw, Share2 } from 'lucide-react';
 
 /**
  * PostTestSummary — Displayed after test completion
@@ -28,7 +27,6 @@ export default function PostTestSummary() {
   const telemetry = useTypingStore((s) => s.lastCompletedTelemetry);
   const resetTest = useTypingStore((s) => s.resetTest);
   const timeline = useTypingStore((s) => s.perSecondTimeline);
-  const [replayOpen, setReplayOpen] = useState(false);
   const tabPressedRef = useRef(false);
 
   useEffect(() => {
@@ -269,15 +267,6 @@ export default function PostTestSummary() {
           Next Test
         </button>
         <button
-          onClick={() => setReplayOpen(true)}
-          disabled={!telemetry}
-          className="glass-pill px-6 py-3 flex items-center gap-2 font-medium"
-          style={{ color: 'var(--text-untyped)', opacity: telemetry ? 1 : 0.5 }}
-        >
-          <Play className="w-4 h-4" />
-          Watch Replay
-        </button>
-        <button
           onClick={handleShare}
           className="glass-pill px-6 py-3 flex items-center gap-2 font-medium"
           style={{ color: 'var(--text-typed)' }}
@@ -296,8 +285,6 @@ export default function PostTestSummary() {
           <span>— next test</span>
         </div>
       </div>
-
-      <GhostReplayModal isOpen={replayOpen} onClose={() => setReplayOpen(false)} />
     </div>
   );
 }

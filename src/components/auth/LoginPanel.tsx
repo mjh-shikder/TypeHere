@@ -47,7 +47,7 @@ export default function LoginPanel() {
         </h1>
       </div>
       <p className="text-sm text-center mb-8" style={{ color: 'var(--text-typed)' }}>
-        Save tests across devices, claim a leaderboard spot, and keep full ghost replays.
+        Save tests across devices, claim a leaderboard spot, and track detailed progress.
       </p>
 
       <div className="space-y-3">

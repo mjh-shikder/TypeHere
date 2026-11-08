@@ -8,13 +8,11 @@ import type {
   LeaderboardTimeframe,
   LeaderboardEntry,
   LocalTestSummary,
-  TestTelemetry,
 } from '@/types/typing';
 import { formatNumber } from '@/lib/utils';
 import { getPersonalBest } from '@/lib/local-storage';
-import GhostReplayModal from '@/components/typing/GhostReplayModal';
 import UserAvatar from '@/components/profile/UserAvatar';
-import { Trophy, Clock, Flame, Play } from 'lucide-react';
+import { Trophy, Clock, Flame } from 'lucide-react';
 
 const DURATION_OPTIONS: { value: TestDuration; label: string }[] = [
   { value: 60, label: '1 min' },
@@ -38,9 +36,6 @@ export default function LeaderboardTable() {
   const [timeframe, setTimeframe] = useState<LeaderboardTimeframe>('allTime');
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
-  const [replayOpen, setReplayOpen] = useState(false);
-  const [replayTelemetry, setReplayTelemetry] = useState<TestTelemetry | null>(null);
-  const [replayError, setReplayError] = useState<string | null>(null);
   const [guestPb, setGuestPb] = useState<LocalTestSummary | null>(null);
   const [page, setPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
@@ -96,26 +91,6 @@ export default function LeaderboardTable() {
     return rank;
   }, [entries, guestPb]);
 
-  const openReplay = async (testId: string) => {
-    setReplayError(null);
-    try {
-      const res = await fetch(`/api/replay/${testId}`);
-      if (!res.ok) {
-        setReplayError('Replay is not available for this run.');
-        return;
-      }
-      const data = await res.json();
-      if (!data.telemetry) {
-        setReplayError('This run has no keystroke replay (guest-synced tests are summary-only).');
-        return;
-      }
-      setReplayTelemetry(data.telemetry as TestTelemetry);
-      setReplayOpen(true);
-    } catch {
-      setReplayError('Failed to load replay.');
-    }
-  };
-
   const getRankStyle = (rank: number) => {
     if (rank === 1) return { color: '#ffd700' }; // Gold
     if (rank === 2) return { color: '#c0c0c0' }; // Silver
@@ -168,11 +143,10 @@ export default function LeaderboardTable() {
         <table className="w-full">
           <thead>
             <tr style={{ borderBottom: '1px solid var(--glass-border)' }}>
-              <th className="text-left text-xs font-medium px-6 py-4" style={{ color: 'var(--text-typed)' }}>#</th>
-              <th className="text-left text-xs font-medium px-6 py-4" style={{ color: 'var(--text-typed)' }}>User</th>
-              <th className="text-right text-xs font-medium px-6 py-4" style={{ color: 'var(--text-typed)' }}>WPM</th>
-              <th className="text-right text-xs font-medium px-6 py-4 hidden sm:table-cell" style={{ color: 'var(--text-typed)' }}>Accuracy</th>
-              <th className="text-right text-xs font-medium px-6 py-4" style={{ color: 'var(--text-typed)' }}>Replay</th>
+              <th className="w-14 sm:w-16 text-left text-xs font-medium px-4 sm:px-6 py-4" style={{ color: 'var(--text-typed)' }}>#</th>
+              <th className="text-left text-xs font-medium px-4 sm:px-6 py-4" style={{ color: 'var(--text-typed)' }}>User</th>
+              <th className="w-24 sm:w-32 text-right text-xs font-medium px-4 sm:px-6 py-4" style={{ color: 'var(--text-typed)' }}>WPM</th>
+              <th className="w-24 sm:w-32 text-right text-xs font-medium px-4 sm:px-6 py-4 hidden sm:table-cell" style={{ color: 'var(--text-typed)' }}>Accuracy</th>
             </tr>
           </thead>
           <tbody>
@@ -180,23 +154,23 @@ export default function LeaderboardTable() {
               // Loading skeleton
               Array.from({ length: 10 }).map((_, i) => (
                 <tr key={i} style={{ borderBottom: '1px solid var(--glass-border)' }}>
-                  <td className="px-6 py-4">
+                  <td className="w-14 sm:w-16 px-4 sm:px-6 py-4">
                     <div className="w-6 h-4 rounded bg-white/5 animate-pulse" />
                   </td>
-                  <td className="px-6 py-4">
+                  <td className="px-4 sm:px-6 py-4">
                     <div className="w-32 h-4 rounded bg-white/5 animate-pulse" />
                   </td>
-                  <td className="px-6 py-4">
+                  <td className="w-24 sm:w-32 px-4 sm:px-6 py-4">
                     <div className="w-12 h-4 rounded bg-white/5 animate-pulse ml-auto" />
                   </td>
-                  <td className="px-6 py-4 hidden sm:table-cell">
+                  <td className="w-24 sm:w-32 px-4 sm:px-6 py-4 hidden sm:table-cell">
                     <div className="w-16 h-4 rounded bg-white/5 animate-pulse ml-auto" />
                   </td>
                 </tr>
               ))
             ) : entries.length === 0 && !guestPb ? (
               <tr>
-                <td colSpan={5} className="px-6 py-16 text-center">
+                <td colSpan={4} className="px-4 sm:px-6 py-16 text-center">
                   <p className="text-sm" style={{ color: 'var(--text-typed)' }}>
                     No results yet. Be the first to set a record!
                   </p>
@@ -217,10 +191,10 @@ export default function LeaderboardTable() {
                       className="hover:bg-white/[0.02] transition-colors"
                       style={{ borderBottom: '1px solid var(--glass-border)' }}
                     >
-                      <td className="px-6 py-4 text-sm font-bold tabular-nums" style={getRankStyle(entry.rank)}>
+                      <td className="w-14 sm:w-16 px-4 sm:px-6 py-4 text-sm font-bold tabular-nums" style={getRankStyle(entry.rank)}>
                         {entry.rank}
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="px-4 sm:px-6 py-4">
                         <div className="flex items-center gap-3">
                           <UserAvatar
                             src={
@@ -233,7 +207,7 @@ export default function LeaderboardTable() {
                           />
                           <Link
                             href={`/u/${entry.username}`}
-                            className="text-sm font-medium hover:underline"
+                            className="text-sm font-medium hover:underline truncate max-w-[140px] sm:max-w-none"
                             style={{ color: 'var(--text-untyped)' }}
                           >
                             {entry.username}
@@ -241,25 +215,16 @@ export default function LeaderboardTable() {
                         </div>
                       </td>
                       <td
-                        className="px-6 py-4 text-right text-sm font-bold tabular-nums"
+                        className="w-24 sm:w-32 px-4 sm:px-6 py-4 text-right text-sm font-bold tabular-nums"
                         style={{ color: 'var(--accent-primary)' }}
                       >
                         {Math.round(entry.rawWpm)}
                       </td>
                       <td
-                        className="px-6 py-4 text-right text-sm tabular-nums hidden sm:table-cell"
+                        className="w-24 sm:w-32 px-4 sm:px-6 py-4 text-right text-sm tabular-nums hidden sm:table-cell"
                         style={{ color: 'var(--text-untyped)' }}
                       >
                         {formatNumber(entry.accuracy)}%
-                      </td>
-                      <td className="px-6 py-4 text-right">
-                        <button
-                          onClick={() => void openReplay(entry.testId)}
-                          className="glass-pill p-2"
-                          aria-label={`Watch replay for ${entry.username}`}
-                        >
-                          <Play className="w-3.5 h-3.5" style={{ color: 'var(--text-untyped)' }} />
-                        </button>
                       </td>
                     </tr>
                   </Fragment>
@@ -305,23 +270,11 @@ export default function LeaderboardTable() {
         </div>
       )}
 
-      {replayError && (
-        <p className="text-sm text-center" style={{ color: 'var(--text-error)' }}>
-          {replayError}
-        </p>
-      )}
-
       {guestPb && status !== 'authenticated' && (
         <p className="text-sm text-center" style={{ color: 'var(--text-typed)' }}>
           Sign in to claim your highlighted personal-best rank on the global board.
         </p>
       )}
-
-      <GhostReplayModal
-        isOpen={replayOpen}
-        onClose={() => setReplayOpen(false)}
-        telemetryOverride={replayTelemetry}
-      />
     </div>
   );
 }
@@ -344,21 +297,20 @@ function GuestComparisonRow({
         background: 'rgba(var(--accent-primary-rgb), 0.08)',
       }}
     >
-      <td className="px-6 py-4 text-sm font-bold tabular-nums" style={{ color: 'var(--accent-primary)' }}>
+      <td className="w-14 sm:w-16 px-4 sm:px-6 py-4 text-sm font-bold tabular-nums" style={{ color: 'var(--accent-primary)' }}>
         {belowFold ? `${rank}+` : rank}
       </td>
-      <td className="px-6 py-4">
+      <td className="px-4 sm:px-6 py-4">
         <Link href="/login" className="text-sm font-medium" style={{ color: 'var(--accent-primary)' }}>
           You (guest PB) — sign in to claim
         </Link>
       </td>
-      <td className="px-6 py-4 text-right text-sm font-bold tabular-nums" style={{ color: 'var(--accent-primary)' }}>
+      <td className="w-24 sm:w-32 px-4 sm:px-6 py-4 text-right text-sm font-bold tabular-nums" style={{ color: 'var(--accent-primary)' }}>
         {Math.round(wpm)}
       </td>
-      <td className="px-6 py-4 text-right text-sm tabular-nums hidden sm:table-cell" style={{ color: 'var(--text-untyped)' }}>
+      <td className="w-24 sm:w-32 px-4 sm:px-6 py-4 text-right text-sm tabular-nums hidden sm:table-cell" style={{ color: 'var(--text-untyped)' }}>
         {formatNumber(accuracy)}%
       </td>
-      <td />
     </tr>
   );
 }

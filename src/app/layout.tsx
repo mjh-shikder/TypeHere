@@ -42,7 +42,7 @@ export const metadata: Metadata = {
     template: '%s | TypeHere',
   },
   description:
-    'Practice typing for free with 1, 3, and 5-minute tests. Improve your speed, accuracy, and stamina with detailed stats, replays, and leaderboards.',
+    'Practice typing for free with 1, 3, and 5-minute tests. Improve your speed, accuracy, and stamina with detailed stats and leaderboards.',
   keywords: [
     'free typing practice',
     'typing test',
@@ -62,7 +62,7 @@ export const metadata: Metadata = {
     siteName: 'TypeHere',
     title: 'TypeHere — Free Typing Practice',
     description:
-      'Build typing speed, accuracy, and stamina with free timed tests, detailed analytics, replays, and global leaderboards.',
+      'Build typing speed, accuracy, and stamina with free timed tests, detailed analytics, and global leaderboards.',
     images: [
       {
         url: 'https://i.ibb.co.com/WWtP92jL/type-Here.png',
@@ -74,7 +74,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'TypeHere — Free Typing Practice',
     description:
-      'Build typing speed, accuracy, and stamina with free timed tests, detailed analytics, replays, and global leaderboards.',
+      'Build typing speed, accuracy, and stamina with free timed tests, detailed analytics, and global leaderboards.',
     images: [
       {
         url: 'https://i.ibb.co.com/WWtP92jL/type-Here.png',
