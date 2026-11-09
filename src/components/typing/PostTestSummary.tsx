@@ -15,7 +15,36 @@ import {
   Scatter,
   ComposedChart,
 } from 'recharts';
-import { RotateCcw, Share2 } from 'lucide-react';
+import { RotateCcw, Share2, Check } from 'lucide-react';
+import { toast } from 'sonner';
+
+async function copyTextToClipboard(text: string): Promise<boolean> {
+  if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch {
+      // Fall back to execCommand below when Clipboard API is restricted
+    }
+  }
+
+  if (typeof document === 'undefined') return false;
+  const textarea = document.createElement('textarea');
+  textarea.value = text;
+  textarea.setAttribute('readonly', '');
+  textarea.style.position = 'fixed';
+  textarea.style.top = '-9999px';
+  textarea.style.left = '-9999px';
+  document.body.appendChild(textarea);
+  textarea.select();
+  try {
+    return document.execCommand('copy');
+  } catch {
+    return false;
+  } finally {
+    document.body.removeChild(textarea);
+  }
+}
 
 /**
  * PostTestSummary — Displayed after test completion
@@ -28,6 +57,16 @@ export default function PostTestSummary() {
   const resetTest = useTypingStore((s) => s.resetTest);
   const timeline = useTypingStore((s) => s.perSecondTimeline);
   const tabPressedRef = useRef(false);
+  const copiedTimeoutRef = useRef<number | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    return () => {
+      if (copiedTimeoutRef.current !== null) {
+        window.clearTimeout(copiedTimeoutRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
@@ -73,13 +112,25 @@ export default function PostTestSummary() {
 
   const activeSeconds = telemetry ? calculateActiveTypingSeconds(telemetry.events) : 0;
 
-  const handleShare = () => {
+  const handleShare = async () => {
     const text = `TypeHere Result 🎯\n` +
       `WPM: ${formatNumber(summary.rawWpm, 0)} | Accuracy: ${formatNumber(summary.accuracy)}%\n` +
       `Duration: ${formatDuration(summary.duration)}\n` +
       `Characters: ${summary.charactersCorrect}✓ / ${summary.charactersWrong}✗ / ${summary.charactersExtra}+ / ${summary.charactersMissed}⊘`;
 
-    navigator.clipboard.writeText(text).catch(() => {});
+    const didCopy = await copyTextToClipboard(text);
+    if (didCopy) {
+      setCopied(true);
+      if (copiedTimeoutRef.current !== null) {
+        window.clearTimeout(copiedTimeoutRef.current);
+      }
+      copiedTimeoutRef.current = window.setTimeout(() => {
+        setCopied(false);
+      }, 2500);
+      toast.success('Result copied to clipboard!');
+    } else {
+      toast.error('Could not copy result to clipboard.');
+    }
   };
 
   return (
@@ -267,12 +318,14 @@ export default function PostTestSummary() {
           Next Test
         </button>
         <button
-          onClick={handleShare}
-          className="glass-pill px-6 py-3 flex items-center gap-2 font-medium"
-          style={{ color: 'var(--text-typed)' }}
+          type="button"
+          onClick={() => void handleShare()}
+          data-active={copied}
+          className="glass-pill px-6 py-3 flex items-center gap-2 font-medium cursor-pointer"
+          style={{ color: copied ? 'var(--accent-primary)' : 'var(--text-typed)' }}
         >
-          <Share2 className="w-4 h-4" />
-          Share
+          {copied ? <Check className="w-4 h-4" /> : <Share2 className="w-4 h-4" />}
+          {copied ? 'Copied!' : 'Share'}
         </button>
       </div>
 

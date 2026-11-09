@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { SessionProvider, useSession } from 'next-auth/react';
+import { Toaster } from 'sonner';
 import { submitTestResultAction, syncGuestTestsAction, submitGuestTestAction } from '@/app/actions/test-actions';
 import {
   getStoredSettings,
@@ -145,6 +146,18 @@ export default function AppProviders({ children }: { children: React.ReactNode }
     <SessionProvider>
       <AuthRuntime />
       {children}
+      <Toaster
+        position="bottom-center"
+        theme="dark"
+        toastOptions={{
+          style: {
+            background: 'rgba(var(--bg-canvas-rgb), 0.88)',
+            border: '1px solid var(--glass-border)',
+            color: 'var(--text-untyped)',
+            backdropFilter: 'blur(16px)',
+          },
+        }}
+      />
     </SessionProvider>
   );
 }

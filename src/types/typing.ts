@@ -147,6 +147,7 @@ export interface LeaderboardResponse {
   totalCount: number;
   page: number;
   limit: number;
+  myRank?: number | null;
 }
 
 // -----------------------------------------------------------------------------

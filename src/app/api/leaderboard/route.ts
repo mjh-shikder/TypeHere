@@ -1,9 +1,10 @@
 // =============================================================================
 // TypeHere — Leaderboard API Route
-// GET /api/leaderboard?duration=60&timeframe=allTime&page=1&limit=50
+// GET /api/leaderboard?duration=60&timeframe=allTime&page=1&limit=20
 // =============================================================================
 
 import { NextRequest, NextResponse } from 'next/server';
+import { auth } from '@/lib/auth';
 import prisma from '@/lib/prisma';
 import { leaderboardQuerySchema } from '@/lib/validations';
 
@@ -16,7 +17,7 @@ export async function GET(request: NextRequest) {
     duration: searchParams.get('duration') ? Number(searchParams.get('duration')) : 60,
     timeframe: searchParams.get('timeframe') || 'allTime',
     page: searchParams.get('page') ? Number(searchParams.get('page')) : 1,
-    limit: searchParams.get('limit') ? Number(searchParams.get('limit')) : 50,
+    limit: searchParams.get('limit') ? Number(searchParams.get('limit')) : 20,
   });
 
   if (!parsed.success) {
@@ -27,6 +28,8 @@ export async function GET(request: NextRequest) {
   }
 
   const { duration, timeframe, page, limit } = parsed.data;
+  const guestIdParam = searchParams.get('guestId');
+  const guestId = guestIdParam && /^ghostuser_\d{4}$/.test(guestIdParam) ? guestIdParam : null;
 
   let dateFilter = {};
   const now = new Date();
@@ -39,7 +42,9 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    // Fetch all verified results (real users + ghost user), sorted by rawWpm desc
+    const session = await auth().catch(() => null);
+
+    // Fetch verified results (lightweight select, excluding heavy JSON columns), sorted by rawWpm desc
     const results = await prisma.testResult.findMany({
       where: {
         duration,
@@ -50,7 +55,15 @@ export async function GET(request: NextRequest) {
         { rawWpm: 'desc' },
         { accuracy: 'desc' },
       ],
-      include: {
+      select: {
+        id: true,
+        userId: true,
+        guestName: true,
+        wpm: true,
+        rawWpm: true,
+        accuracy: true,
+        consistency: true,
+        createdAt: true,
         user: {
           select: {
             username: true,
@@ -58,7 +71,6 @@ export async function GET(request: NextRequest) {
           },
         },
       },
-      take: limit * 10, // Fetch extra for deduplication across users + ghost identities
     });
 
     // Deduplicate:
@@ -79,6 +91,18 @@ export async function GET(request: NextRequest) {
         seenUsers.add(r.userId);
         return true;
       }
+    });
+
+    // Find current viewer's rank (authenticated user or matching guest identity)
+    const myIndex = deduped.findIndex((r) => {
+      const isGuestRow = r.user.username === GHOST_USERNAME;
+      if (session?.user?.id) {
+        return !isGuestRow && r.userId === session.user.id;
+      }
+      if (guestId) {
+        return isGuestRow && r.guestName === guestId;
+      }
+      return false;
     });
 
     // Paginate
@@ -108,6 +132,7 @@ export async function GET(request: NextRequest) {
         totalCount,
         page,
         limit,
+        myRank: myIndex >= 0 ? myIndex + 1 : null,
       },
       {
         headers: {

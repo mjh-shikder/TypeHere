@@ -94,7 +94,7 @@ export default function SmoothCaret({ containerRef, isGhost = false, ghostCharIn
         }
       }
 
-      caretRef.current.style.opacity = '1';
+      caretRef.current.style.opacity = isGhost ? '0.55' : '1';
 
       // Position based on cursor style
       if (cursorStyle === 'line') {

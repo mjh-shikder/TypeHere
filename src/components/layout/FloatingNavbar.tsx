@@ -74,12 +74,27 @@ export default function FloatingNavbar() {
 
   return (
     <nav
-      className={`fixed top-4 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-1.5rem)] max-w-5xl fade-on-typing transition-opacity duration-400 ${
+      className={`fixed top-4 left-0 right-0 z-50 px-3 flex justify-center fade-on-typing transition-opacity duration-400 ${
         isTyping ? 'opacity-0 pointer-events-none' : 'opacity-100'
       }`}
     >
-      <div className="glass-panel rounded-2xl px-4 py-3 flex flex-wrap items-center justify-center gap-3 sm:gap-6">
-        <Link href="/" className="flex items-center gap-2 group">
+      <div className="relative w-full max-w-5xl rounded-2xl">
+        <div
+          aria-hidden="true"
+          className="floating-nav-glass backdrop-blur-2xl backdrop-saturate-150 pointer-events-none absolute inset-0 rounded-2xl"
+        />
+        <div className="relative z-10 px-4 py-3 flex flex-wrap items-center justify-center gap-3 sm:gap-6">
+        <a
+          href="/"
+          onClick={(event) => {
+            if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) {
+              return;
+            }
+            event.preventDefault();
+            window.location.assign('/');
+          }}
+          className="flex items-center gap-2 group"
+        >
           <Keyboard
             className="w-5 h-5 transition-colors"
             style={{ color: 'var(--accent-primary)' }}
@@ -90,7 +105,7 @@ export default function FloatingNavbar() {
           >
             TypeHere
           </span>
-        </Link>
+        </a>
 
         <div className="w-px h-6" style={{ background: 'var(--glass-border)' }} />
 
@@ -285,6 +300,7 @@ export default function FloatingNavbar() {
             Sign In
           </Link>
         )}
+        </div>
       </div>
     </nav>
   );

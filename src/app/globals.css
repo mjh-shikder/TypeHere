@@ -155,8 +155,8 @@
 
 /* Frosted Glass Panel (Surface Level 1) */
 .glass-panel {
-  backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
   background: var(--glass-surface);
   border: 1px solid var(--glass-border);
   box-shadow:
@@ -164,10 +164,21 @@
     0 20px 40px -15px rgba(0, 0, 0, 0.5);
 }
 
+/* Strong Frosted Glass Backing for Floating Navbar (isolated from nested pills) */
+.floating-nav-glass {
+  -webkit-backdrop-filter: blur(32px) saturate(160%);
+  backdrop-filter: blur(32px) saturate(160%);
+  background: rgba(var(--bg-canvas-rgb), 0.58);
+  border: 1px solid var(--glass-border);
+  box-shadow:
+    inset 0 1px 1px 0 var(--glass-highlight),
+    0 20px 40px -15px rgba(0, 0, 0, 0.55);
+}
+
 /* Floating Glass Pill (Interactive Level 2) */
 .glass-pill {
-  backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
   background: var(--glass-surface);
   border: 1px solid var(--glass-border);
   border-radius: 9999px;
@@ -192,8 +203,8 @@
 
 /* Glass Input */
 .glass-input {
-  backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
   background: rgba(0, 0, 0, 0.25);
   border: 1px solid var(--glass-border);
   border-radius: 0.75rem;
@@ -286,10 +297,26 @@
   animation: caret-blink 1s ease-in-out infinite;
 }
 
-/* Ghost caret (semi-transparent, no animation) */
+/* Ghost caret (semi-transparent silver, no animation) */
 .caret-ghost {
-  opacity: 0.35;
+  z-index: 9;
+  opacity: 0.55;
   animation: none !important;
+}
+
+.caret-line.caret-ghost {
+  background: #cbd5e1;
+  box-shadow: 0 0 8px rgba(203, 213, 225, 0.35);
+}
+
+.caret-block.caret-ghost {
+  background: rgba(203, 213, 225, 0.22);
+  border-color: #cbd5e1;
+}
+
+.caret-underline.caret-ghost {
+  background: #cbd5e1;
+  box-shadow: 0 0 8px rgba(203, 213, 225, 0.35);
 }
 
 @keyframes caret-blink {
@@ -306,6 +333,10 @@
 .typing-active .caret {
   animation: none !important;
   opacity: 1;
+}
+
+.typing-active .caret.caret-ghost {
+  opacity: 0.55;
 }
 
 /* =============================================================================
