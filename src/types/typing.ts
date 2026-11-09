@@ -139,6 +139,7 @@ export interface LeaderboardEntry {
   consistency: number;
   testId: string;
   createdAt: string;
+  isGuest?: boolean;
 }
 
 export interface LeaderboardResponse {

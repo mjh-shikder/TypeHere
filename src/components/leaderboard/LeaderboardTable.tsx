@@ -1,16 +1,13 @@
 'use client';
 
-import { Fragment, useState, useEffect, useMemo } from 'react';
+import { Fragment, useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useSession } from 'next-auth/react';
 import type {
   TestDuration,
   LeaderboardTimeframe,
   LeaderboardEntry,
-  LocalTestSummary,
 } from '@/types/typing';
 import { formatNumber } from '@/lib/utils';
-import { getPersonalBest } from '@/lib/local-storage';
 import UserAvatar from '@/components/profile/UserAvatar';
 import { Trophy, Clock, Flame } from 'lucide-react';
 
@@ -31,12 +28,10 @@ const TIMEFRAME_OPTIONS: { value: LeaderboardTimeframe; label: string; icon: Rea
  * Filterable by duration (1m/3m/5m) and timeframe (All-Time/Weekly/Daily)
  */
 export default function LeaderboardTable() {
-  const { status } = useSession();
   const [duration, setDuration] = useState<TestDuration>(60);
   const [timeframe, setTimeframe] = useState<LeaderboardTimeframe>('allTime');
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
-  const [guestPb, setGuestPb] = useState<LocalTestSummary | null>(null);
   const [page, setPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const limit = 50;
@@ -66,30 +61,6 @@ export default function LeaderboardTable() {
 
     fetchLeaderboard();
   }, [duration, timeframe, page]);
-
-  useEffect(() => {
-    if (status === 'authenticated') {
-      setGuestPb(null);
-      return;
-    }
-    setGuestPb(getPersonalBest(duration));
-  }, [duration, status]);
-
-  const guestRank = useMemo(() => {
-    if (!guestPb) return null;
-    let rank = 1;
-    for (const entry of entries) {
-      if (
-        entry.rawWpm > guestPb.rawWpm ||
-        (entry.rawWpm === guestPb.rawWpm && entry.accuracy > guestPb.accuracy)
-      ) {
-        rank += 1;
-      } else {
-        break;
-      }
-    }
-    return rank;
-  }, [entries, guestPb]);
 
   const getRankStyle = (rank: number) => {
     if (rank === 1) return { color: '#ffd700' }; // Gold
@@ -151,7 +122,6 @@ export default function LeaderboardTable() {
           </thead>
           <tbody>
             {loading ? (
-              // Loading skeleton
               Array.from({ length: 10 }).map((_, i) => (
                 <tr key={i} style={{ borderBottom: '1px solid var(--glass-border)' }}>
                   <td className="w-14 sm:w-16 px-4 sm:px-6 py-4">
@@ -168,7 +138,7 @@ export default function LeaderboardTable() {
                   </td>
                 </tr>
               ))
-            ) : entries.length === 0 && !guestPb ? (
+            ) : entries.length === 0 ? (
               <tr>
                 <td colSpan={4} className="px-4 sm:px-6 py-16 text-center">
                   <p className="text-sm" style={{ color: 'var(--text-typed)' }}>
@@ -180,13 +150,6 @@ export default function LeaderboardTable() {
               <>
                 {entries.map((entry) => (
                   <Fragment key={entry.testId}>
-                    {guestPb && guestRank === entry.rank && (
-                      <GuestComparisonRow
-                        rank={guestRank}
-                        wpm={guestPb.rawWpm}
-                        accuracy={guestPb.accuracy}
-                      />
-                    )}
                     <tr
                       className="hover:bg-white/[0.02] transition-colors"
                       style={{ borderBottom: '1px solid var(--glass-border)' }}
@@ -195,28 +158,40 @@ export default function LeaderboardTable() {
                         {entry.rank}
                       </td>
                       <td className="px-4 sm:px-6 py-4">
-                        <div className="flex items-center gap-3">
-                          <UserAvatar
-                            src={
-                              entry.image
-                                ? `/api/users/${encodeURIComponent(entry.username)}/avatar`
-                                : null
-                            }
-                            name={entry.username}
-                            className="w-7 h-7"
-                          />
-                          <Link
-                            href={`/u/${entry.username}`}
-                            className="text-sm font-medium hover:underline truncate max-w-[140px] sm:max-w-none"
-                            style={{ color: 'var(--text-untyped)' }}
-                          >
-                            {entry.username}
-                          </Link>
-                        </div>
+                        {entry.isGuest ? (
+                          <div className="flex items-center gap-2">
+                            <span className="text-base" aria-hidden>👻</span>
+                            <span
+                              className="text-sm font-medium"
+                              style={{ color: 'var(--text-typed)' }}
+                            >
+                              {entry.username}
+                            </span>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-3">
+                            <UserAvatar
+                              src={
+                                entry.image
+                                  ? `/api/users/${encodeURIComponent(entry.username)}/avatar`
+                                  : null
+                              }
+                              name={entry.username}
+                              className="w-7 h-7"
+                            />
+                            <Link
+                              href={`/u/${entry.username}`}
+                              className="text-sm font-medium hover:underline truncate max-w-[140px] sm:max-w-none"
+                              style={{ color: 'var(--text-untyped)' }}
+                            >
+                              {entry.username}
+                            </Link>
+                          </div>
+                        )}
                       </td>
                       <td
                         className="w-24 sm:w-32 px-4 sm:px-6 py-4 text-right text-sm font-bold tabular-nums"
-                        style={{ color: 'var(--accent-primary)' }}
+                        style={{ color: entry.isGuest ? 'var(--text-untyped)' : 'var(--accent-primary)' }}
                       >
                         {Math.round(entry.rawWpm)}
                       </td>
@@ -229,14 +204,6 @@ export default function LeaderboardTable() {
                     </tr>
                   </Fragment>
                 ))}
-                {guestPb && guestRank !== null && (entries.length === 0 || guestRank > entries.length) && (
-                  <GuestComparisonRow
-                    rank={guestRank}
-                    wpm={guestPb.rawWpm}
-                    accuracy={guestPb.accuracy}
-                    belowFold={entries.length > 0 && guestRank > entries.length}
-                  />
-                )}
               </>
             )}
           </tbody>
@@ -269,48 +236,6 @@ export default function LeaderboardTable() {
           </button>
         </div>
       )}
-
-      {guestPb && status !== 'authenticated' && (
-        <p className="text-sm text-center" style={{ color: 'var(--text-typed)' }}>
-          Sign in to claim your highlighted personal-best rank on the global board.
-        </p>
-      )}
     </div>
-  );
-}
-
-function GuestComparisonRow({
-  rank,
-  wpm,
-  accuracy,
-  belowFold = false,
-}: {
-  rank: number;
-  wpm: number;
-  accuracy: number;
-  belowFold?: boolean;
-}) {
-  return (
-    <tr
-      style={{
-        borderBottom: '1px solid var(--glass-border)',
-        background: 'rgba(var(--accent-primary-rgb), 0.08)',
-      }}
-    >
-      <td className="w-14 sm:w-16 px-4 sm:px-6 py-4 text-sm font-bold tabular-nums" style={{ color: 'var(--accent-primary)' }}>
-        {belowFold ? `${rank}+` : rank}
-      </td>
-      <td className="px-4 sm:px-6 py-4">
-        <Link href="/login" className="text-sm font-medium" style={{ color: 'var(--accent-primary)' }}>
-          You (guest PB) — sign in to claim
-        </Link>
-      </td>
-      <td className="w-24 sm:w-32 px-4 sm:px-6 py-4 text-right text-sm font-bold tabular-nums" style={{ color: 'var(--accent-primary)' }}>
-        {Math.round(wpm)}
-      </td>
-      <td className="w-24 sm:w-32 px-4 sm:px-6 py-4 text-right text-sm tabular-nums hidden sm:table-cell" style={{ color: 'var(--text-untyped)' }}>
-        {formatNumber(accuracy)}%
-      </td>
-    </tr>
   );
 }

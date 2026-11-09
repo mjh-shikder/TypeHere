@@ -7,10 +7,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { leaderboardQuerySchema } from '@/lib/validations';
 
+const GHOST_USERNAME = '__ghost__';
+
 export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
 
-  // Parse and validate query parameters
   const parsed = leaderboardQuerySchema.safeParse({
     duration: searchParams.get('duration') ? Number(searchParams.get('duration')) : 60,
     timeframe: searchParams.get('timeframe') || 'allTime',
@@ -27,7 +28,6 @@ export async function GET(request: NextRequest) {
 
   const { duration, timeframe, page, limit } = parsed.data;
 
-  // Build date filter
   let dateFilter = {};
   const now = new Date();
   if (timeframe === 'weekly') {
@@ -39,8 +39,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    // Get the best result per user for this duration
-    // Using raw query for deduplication (best WPM per user)
+    // Fetch all verified results (real users + ghost user), sorted by rawWpm desc
     const results = await prisma.testResult.findMany({
       where: {
         duration,
@@ -59,15 +58,27 @@ export async function GET(request: NextRequest) {
           },
         },
       },
-      take: limit * 3, // Fetch extra for deduplication
+      take: limit * 10, // Fetch extra for deduplication across users + ghost identities
     });
 
-    // Deduplicate: one best entry per user
+    // Deduplicate:
+    // - Real users: one best entry per userId
+    // - Ghost user: one best entry per guestName
     const seenUsers = new Set<string>();
+    const seenGuests = new Set<string>();
     const deduped = results.filter((r) => {
-      if (seenUsers.has(r.userId)) return false;
-      seenUsers.add(r.userId);
-      return true;
+      if (r.user.username === GHOST_USERNAME) {
+        // Ghost entry — deduplicate by guestName
+        const key = r.guestName ?? r.id;
+        if (seenGuests.has(key)) return false;
+        seenGuests.add(key);
+        return true;
+      } else {
+        // Real user entry — deduplicate by userId
+        if (seenUsers.has(r.userId)) return false;
+        seenUsers.add(r.userId);
+        return true;
+      }
     });
 
     // Paginate
@@ -78,14 +89,17 @@ export async function GET(request: NextRequest) {
     const entries = paged.map((r, i) => ({
       rank: startIndex + i + 1,
       userId: r.userId,
-      username: r.user.username || 'anonymous',
-      image: r.user.image,
+      username: r.user.username === GHOST_USERNAME
+        ? (r.guestName ?? 'ghostuser')
+        : (r.user.username ?? 'anonymous'),
+      image: r.user.username === GHOST_USERNAME ? null : r.user.image,
       wpm: r.wpm,
       rawWpm: r.rawWpm,
       accuracy: r.accuracy,
       consistency: r.consistency,
       testId: r.id,
       createdAt: r.createdAt.toISOString(),
+      isGuest: r.user.username === GHOST_USERNAME,
     }));
 
     return NextResponse.json({

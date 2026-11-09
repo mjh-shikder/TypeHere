@@ -2,11 +2,13 @@
 
 import { useEffect, useRef } from 'react';
 import { SessionProvider, useSession } from 'next-auth/react';
-import { submitTestResultAction, syncGuestTestsAction } from '@/app/actions/test-actions';
+import { submitTestResultAction, syncGuestTestsAction, submitGuestTestAction } from '@/app/actions/test-actions';
 import {
   getStoredSettings,
   getUnsyncedTests,
   markTestsSynced,
+  getOrCreateGuestId,
+  clearGuestId,
 } from '@/lib/local-storage';
 import { useTypingStore } from '@/store/useTypingStore';
 
@@ -17,6 +19,7 @@ function AuthRuntime() {
   const summary = useTypingStore((s) => s.lastCompletedSummary);
   const telemetry = useTypingStore((s) => s.lastCompletedTelemetry);
   const submittedIdRef = useRef<string | null>(null);
+  const guestSubmittedIdRef = useRef<string | null>(null);
   const syncedOnceRef = useRef(false);
 
   useEffect(() => {
@@ -34,25 +37,33 @@ function AuthRuntime() {
     });
   }, [status, session, hydrateSettings]);
 
+  // Sync guest tests to DB on login, then clean up ghost entries
   useEffect(() => {
     if (status !== 'authenticated' || syncedOnceRef.current) return;
 
     const unsynced = getUnsyncedTests().slice(0, 50);
+    const guestId = getOrCreateGuestId();
+    syncedOnceRef.current = true;
+
     if (unsynced.length === 0) {
-      syncedOnceRef.current = true;
+      // Still clean up any ghost leaderboard entries
+      void syncGuestTestsAction([], guestId).then(() => {
+        clearGuestId();
+      });
       return;
     }
 
-    syncedOnceRef.current = true;
-    void syncGuestTestsAction(unsynced).then((result) => {
+    void syncGuestTestsAction(unsynced, guestId).then((result) => {
       if (result.success && result.syncedIds) {
         markTestsSynced(result.syncedIds);
+        clearGuestId();
       } else {
         syncedOnceRef.current = false;
       }
     });
   }, [status]);
 
+  // Submit authenticated test to DB
   useEffect(() => {
     if (status !== 'authenticated' || phase !== 'finished' || !summary || !telemetry) {
       return;
@@ -82,6 +93,21 @@ function AuthRuntime() {
       }
     });
   }, [status, phase, summary, telemetry]);
+
+  // Submit guest test to public leaderboard (ghost user in DB)
+  useEffect(() => {
+    if (status !== 'unauthenticated' || phase !== 'finished' || !summary) {
+      return;
+    }
+    if (guestSubmittedIdRef.current === summary.id) return;
+
+    guestSubmittedIdRef.current = summary.id;
+    const guestName = getOrCreateGuestId();
+
+    void submitGuestTestAction({ guestName, summary }).catch(() => {
+      guestSubmittedIdRef.current = null;
+    });
+  }, [status, phase, summary]);
 
   return null;
 }

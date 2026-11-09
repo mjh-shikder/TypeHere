@@ -11,6 +11,14 @@ import { submitTestSchema, syncGuestTestsSchema } from '@/lib/validations';
 import { validateTestSubmission } from '@/lib/anti-cheat';
 import type { SubmitTestDTO, LocalTestSummary } from '@/types/typing';
 
+function isSaneSummary(t: LocalTestSummary): boolean {
+  if (![60, 180, 300].includes(t.duration)) return false;
+  if (t.rawWpm > 320 || t.wpm > 320) return false;
+  if (t.accuracy < 0 || t.accuracy > 100) return false;
+  if (t.rawWpm < 0 || t.wpm < 0) return false;
+  return true;
+}
+
 /**
  * Submit a completed typing test result
  * Requires an authenticated session (guests save to localStorage only)
@@ -69,7 +77,7 @@ export async function submitTestResultAction(data: SubmitTestDTO) {
  * Sync guest test summaries to the authenticated user's account
  * Called after sign-in when unlinked localStorage tests exist
  */
-export async function syncGuestTestsAction(tests: LocalTestSummary[]) {
+export async function syncGuestTestsAction(tests: LocalTestSummary[], guestId?: string | null) {
   const session = await auth();
   if (!session?.user?.id) {
     return { error: 'Authentication required' };
@@ -97,6 +105,12 @@ export async function syncGuestTestsAction(tests: LocalTestSummary[]) {
     const newTests = validatedTests.filter((t) => !existingIdSet.has(t.id));
 
     if (newTests.length === 0) {
+      // Clean up ghost leaderboard entries even if nothing to sync
+      if (guestId && /^ghostuser_\d{4}$/.test(guestId)) {
+        await prisma.testResult.deleteMany({
+          where: { guestName: guestId },
+        });
+      }
       return { success: true, synced: 0 };
     }
 
@@ -117,10 +131,17 @@ export async function syncGuestTestsAction(tests: LocalTestSummary[]) {
         charactersMissed: t.charactersMissed,
         timeline: t.timeline,
         mistypedKeys: t.mistypedKeys,
-        isVerified: false,
+        isVerified: isSaneSummary(t),
         createdAt: new Date(t.createdAt),
       })),
     });
+
+    // Clean up ghost leaderboard entries for this guest identity
+    if (guestId && /^ghostuser_\d{4}$/.test(guestId)) {
+      await prisma.testResult.deleteMany({
+        where: { guestName: guestId },
+      });
+    }
 
     revalidatePath('/leaderboard');
     revalidatePath('/profile');
@@ -129,5 +150,72 @@ export async function syncGuestTestsAction(tests: LocalTestSummary[]) {
   } catch (error) {
     console.error('Failed to sync guest tests:', error);
     return { error: 'Failed to sync guest tests' };
+  }
+}
+
+/**
+ * Submit a completed typing test for a guest user.
+ * Runs against the shared ghost User row; guestName identifies the guest identity.
+ */
+export async function submitGuestTestAction(data: {
+  guestName: string;
+  summary: LocalTestSummary;
+}) {
+  const { guestName, summary } = data;
+
+  // Basic validation on guestName
+  if (!guestName || !/^ghostuser_\d{4}$/.test(guestName)) {
+    return { error: 'Invalid guest identity' };
+  }
+
+  // Sanity check the summary
+  if (!isSaneSummary(summary)) {
+    return { error: 'Test data failed validation' };
+  }
+
+  // Ensure the ghost user exists (upsert)
+  const ghostUser = await prisma.user.upsert({
+    where: { username: '__ghost__' },
+    update: {},
+    create: {
+      id: 'ghost-user-system',
+      username: '__ghost__',
+      name: 'Ghost',
+    },
+  });
+
+  try {
+    await prisma.testResult.create({
+      data: {
+        id: summary.id,
+        userId: ghostUser.id,
+        guestName,
+        duration: summary.duration,
+        wpm: summary.wpm,
+        rawWpm: summary.rawWpm,
+        accuracy: summary.accuracy,
+        consistency: summary.consistency,
+        charactersTotal: summary.charactersTotal,
+        charactersCorrect: summary.charactersCorrect,
+        charactersWrong: summary.charactersWrong,
+        charactersExtra: summary.charactersExtra,
+        charactersMissed: summary.charactersMissed,
+        timeline: summary.timeline as unknown as import('@prisma/client').Prisma.InputJsonValue,
+        mistypedKeys: summary.mistypedKeys as unknown as import('@prisma/client').Prisma.InputJsonValue,
+        isVerified: true,
+        createdAt: new Date(summary.createdAt),
+      },
+    });
+
+    revalidatePath('/leaderboard');
+
+    return { success: true };
+  } catch (error: unknown) {
+    // Duplicate ID — already submitted
+    if (typeof error === 'object' && error !== null && 'code' in error && (error as { code: string }).code === 'P2002') {
+      return { success: true };
+    }
+    console.error('Failed to save guest test result:', error);
+    return { error: 'Failed to save guest test result' };
   }
 }

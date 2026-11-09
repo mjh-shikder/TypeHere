@@ -1,5 +1,5 @@
 // =============================================================================
-// TypeHere — localStorage Management for Guest Users
+// TypeHere â€” localStorage Management for Guest Users
 // =============================================================================
 
 import type { LocalTestSummary, TestDuration, UserSettings, GlassTheme, MonospaceFont, FontSize, CursorStyle, WordBankSize } from '@/types/typing';
@@ -9,6 +9,31 @@ const SETTINGS_KEY = 'typehere_settings_v1';
 const NUDGE_KEY = 'typehere_nudge_last_shown';
 const PB_KEY_PREFIX = 'typehere_pb_';
 const MAX_STORED_TESTS = 100;
+const GUEST_ID_KEY = 'typehere_guest_id';
+
+/**
+ * Get or create a persistent guest identity stored in localStorage.
+ * Format: "ghostuser_XXXX" where XXXX is a random 4-digit number.
+ */
+export function getOrCreateGuestId(): string {
+  if (typeof window === 'undefined') return 'ghostuser_0000';
+
+  const existing = localStorage.getItem(GUEST_ID_KEY);
+  if (existing) return existing;
+
+  const num = Math.floor(1000 + Math.random() * 9000); // 1000-9999
+  const id = `ghostuser_${num}`;
+  localStorage.setItem(GUEST_ID_KEY, id);
+  return id;
+}
+
+/**
+ * Clear guest identity (called after successful login sync)
+ */
+export function clearGuestId(): void {
+  if (typeof window === 'undefined') return;
+  localStorage.removeItem(GUEST_ID_KEY);
+}
 
 // --- Nudge Throttling (48-hour rate limit) ---
 

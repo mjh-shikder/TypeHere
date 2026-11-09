@@ -1,5 +1,5 @@
 // =============================================================================
-// TypeHere — Prisma Database Schema
+// TypeHere â€” Prisma Database Schema
 // =============================================================================
 
 datasource db {
@@ -106,6 +106,8 @@ model TestResult {
   // Full Replay Telemetry (Nullable for migrated guest tests)
   telemetry         Json?    // TestTelemetry
 
+  guestName         String?  // Set for guest runs (e.g. "ghostuser_4821"), null for authenticated runs
+
   // Verification & Anti-cheat
   isVerified        Boolean  @default(true)
   flaggedReason     String?
@@ -115,4 +117,5 @@ model TestResult {
   @@index([userId, duration])
   @@index([duration, isVerified, wpm(sort: Desc)])
   @@index([createdAt])
+  @@index([guestName, duration])
 }
