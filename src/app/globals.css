@@ -145,8 +145,8 @@
 @theme inline {
   --color-background: var(--bg-canvas);
   --color-foreground: var(--text-untyped);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono: var(--font-jetbrains-mono), monospace;
 }
 
 /* =============================================================================
@@ -216,6 +216,33 @@
   outline: none;
   border-color: rgba(var(--accent-primary-rgb), 0.5);
   box-shadow: 0 0 0 3px rgba(var(--accent-primary-rgb), 0.1);
+}
+
+/* Keyboard Focus & Skip Link Accessibility */
+.skip-to-content {
+  position: fixed;
+  top: -100%;
+  left: 1rem;
+  z-index: 100;
+  padding: 0.5rem 1rem;
+  border-radius: 9999px;
+  background: var(--bg-canvas);
+  border: 1px solid var(--accent-primary);
+  color: var(--text-untyped);
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: top 150ms ease;
+}
+
+.skip-to-content:focus {
+  top: 1rem;
+}
+
+a:focus-visible,
+button:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
 }
 
 /* =============================================================================
@@ -435,4 +462,11 @@ body {
 
 .animate-float-slower {
   animation: float-slower 25s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-float-slow,
+  .animate-float-slower {
+    animation: none;
+  }
 }

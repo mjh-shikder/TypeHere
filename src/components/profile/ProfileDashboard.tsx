@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
+import dynamic from 'next/dynamic';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import type { LocalTestSummary, TestDuration } from '@/types/typing';
@@ -8,16 +9,22 @@ import { getStoredTests, getAllPersonalBests } from '@/lib/local-storage';
 import { formatNumber, formatDuration } from '@/lib/utils';
 import { useTypingStore } from '@/store/useTypingStore';
 import { updateUserSettingsAction } from '@/app/actions/user-actions';
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-} from 'recharts';
 import { Trophy, Clock, Target, Zap } from 'lucide-react';
+
+const ProfileTrendChart = dynamic(() => import('./ProfileTrendChart'), {
+  ssr: false,
+  loading: () => (
+    <div
+      className="w-full flex items-center justify-center rounded-xl bg-white/[0.02]"
+      style={{ height: '220px' }}
+      role="status"
+    >
+      <p className="text-xs" style={{ color: '#94a3b8' }}>
+        Loading WPM trend chart...
+      </p>
+    </div>
+  ),
+});
 
 /**
  * ProfileDashboard — Universal profile page
@@ -172,10 +179,10 @@ export default function ProfileDashboard() {
   return (
     <div className="w-full max-w-4xl mx-auto space-y-8">
       {status === 'authenticated' && (
-        <div className="glass-panel rounded-2xl p-6 space-y-4">
-          <h3 className="text-sm font-medium" style={{ color: 'var(--text-typed)' }}>
+        <section aria-labelledby="account-settings-heading" className="glass-panel rounded-2xl p-6 space-y-4">
+          <h2 id="account-settings-heading" className="text-sm font-medium" style={{ color: 'var(--text-typed)' }}>
             Account settings
-          </h3>
+          </h2>
           <label className="block">
             <span className="text-xs" style={{ color: 'var(--text-typed)' }}>Username</span>
             <input
@@ -197,151 +204,129 @@ export default function ProfileDashboard() {
               maxLength={160}
             />
           </label>
-          <button
-            onClick={() => void handleSaveProfile()}
-            disabled={savingProfile}
-            className="glass-pill px-4 py-2 text-sm"
-            style={{ color: 'var(--accent-primary)' }}
-          >
-            {savingProfile ? 'Saving...' : 'Save profile'}
-          </button>
-          {username && (
-            <Link
-              href={`/u/${encodeURIComponent(username)}`}
-              className="glass-pill inline-flex px-4 py-2 text-sm"
-              style={{ color: 'var(--text-untyped)' }}
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              onClick={() => void handleSaveProfile()}
+              disabled={savingProfile}
+              className="glass-pill px-4 py-2 text-sm"
+              style={{ color: 'var(--accent-primary)' }}
             >
-              View public profile
-            </Link>
-          )}
+              {savingProfile ? 'Saving...' : 'Save profile'}
+            </button>
+            {username && (
+              <Link
+                href={`/u/${encodeURIComponent(username)}`}
+                className="glass-pill inline-flex px-4 py-2 text-sm"
+                style={{ color: 'var(--text-untyped)' }}
+              >
+                View public profile
+              </Link>
+            )}
+          </div>
           {settingsMessage && (
-            <p className="text-xs" style={{ color: 'var(--text-typed)' }}>
+            <p className="text-xs" style={{ color: 'var(--text-typed)' }} role="status">
               {settingsMessage}
             </p>
           )}
-        </div>
+        </section>
       )}
 
       {/* Personal Bests */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {pbDurations.map((dur) => {
-          const pb = personalBests[dur];
-          return (
-            <div key={dur} className="glass-panel rounded-2xl p-6">
-              <div className="flex items-center gap-2 mb-3">
-                <Trophy className="w-4 h-4" style={{ color: 'var(--accent-primary)' }} />
-                <span className="text-sm font-medium" style={{ color: 'var(--text-typed)' }}>
-                  Personal Best — {formatDuration(dur)}
-                </span>
-              </div>
-              {pb ? (
-                <div>
-                  <p
-                    className="text-4xl font-bold tabular-nums mb-1"
-                    style={{ color: 'var(--accent-primary)' }}
-                  >
-                    {Math.round(pb.rawWpm)} <span className="text-lg font-normal" style={{ color: 'var(--text-typed)' }}>wpm</span>
-                  </p>
-                  <p className="text-sm" style={{ color: 'var(--text-typed)' }}>
-                    {formatNumber(pb.accuracy)}% accuracy
-                  </p>
+      <section aria-labelledby="profile-pb-heading">
+        <h2 id="profile-pb-heading" className="sr-only">
+          Personal Best WPM Scores
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {pbDurations.map((dur) => {
+            const pb = personalBests[dur];
+            return (
+              <div key={dur} className="glass-panel rounded-2xl p-6">
+                <div className="flex items-center gap-2 mb-3">
+                  <Trophy className="w-4 h-4" style={{ color: 'var(--accent-primary)' }} aria-hidden="true" />
+                  <span className="text-sm font-medium" style={{ color: 'var(--text-typed)' }}>
+                    Personal Best — {formatDuration(dur)}
+                  </span>
                 </div>
-              ) : (
-                <p className="text-sm" style={{ color: 'var(--text-typed)' }}>
-                  No tests yet
-                </p>
-              )}
-            </div>
-          );
-        })}
-      </div>
+                {pb ? (
+                  <div>
+                    <p
+                      className="text-4xl font-bold tabular-nums mb-1"
+                      style={{ color: 'var(--accent-primary)' }}
+                    >
+                      {Math.round(pb.rawWpm)} <span className="text-lg font-normal" style={{ color: 'var(--text-typed)' }}>wpm</span>
+                    </p>
+                    <p className="text-sm" style={{ color: 'var(--text-typed)' }}>
+                      {formatNumber(pb.accuracy)}% accuracy
+                    </p>
+                  </div>
+                ) : (
+                  <p className="text-sm" style={{ color: 'var(--text-typed)' }}>
+                    No tests yet
+                  </p>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </section>
 
       {/* Aggregate Stats */}
       {stats && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="glass-panel rounded-xl p-4 text-center">
-            <Zap className="w-4 h-4 mx-auto mb-2" style={{ color: 'var(--accent-primary)' }} />
-            <p className="text-2xl font-bold tabular-nums" style={{ color: 'var(--text-untyped)' }}>
-              {stats.totalTests}
-            </p>
-            <p className="text-xs" style={{ color: 'var(--text-typed)' }}>Tests Completed</p>
+        <section aria-labelledby="profile-stats-heading">
+          <h2 id="profile-stats-heading" className="sr-only">
+            Aggregate Typing Statistics
+          </h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="glass-panel rounded-xl p-4 text-center">
+              <Zap className="w-4 h-4 mx-auto mb-2" style={{ color: 'var(--accent-primary)' }} aria-hidden="true" />
+              <p className="text-2xl font-bold tabular-nums" style={{ color: 'var(--text-untyped)' }}>
+                {stats.totalTests}
+              </p>
+              <p className="text-xs" style={{ color: 'var(--text-typed)' }}>Tests Completed</p>
+            </div>
+            <div className="glass-panel rounded-xl p-4 text-center">
+              <Clock className="w-4 h-4 mx-auto mb-2" style={{ color: 'var(--accent-primary)' }} aria-hidden="true" />
+              <p className="text-2xl font-bold tabular-nums" style={{ color: 'var(--text-untyped)' }}>
+                {formatDuration(stats.totalTime)}
+              </p>
+              <p className="text-xs" style={{ color: 'var(--text-typed)' }}>Total Time</p>
+            </div>
+            <div className="glass-panel rounded-xl p-4 text-center">
+              <Target className="w-4 h-4 mx-auto mb-2" style={{ color: 'var(--accent-primary)' }} aria-hidden="true" />
+              <p className="text-2xl font-bold tabular-nums" style={{ color: 'var(--text-untyped)' }}>
+                {Math.round(stats.avgWpm)}
+              </p>
+              <p className="text-xs" style={{ color: 'var(--text-typed)' }}>Avg WPM</p>
+            </div>
+            <div className="glass-panel rounded-xl p-4 text-center">
+              <Target className="w-4 h-4 mx-auto mb-2" style={{ color: 'var(--accent-primary)' }} aria-hidden="true" />
+              <p className="text-2xl font-bold tabular-nums" style={{ color: 'var(--text-untyped)' }}>
+                {formatNumber(stats.avgAccuracy)}%
+              </p>
+              <p className="text-xs" style={{ color: 'var(--text-typed)' }}>Avg Accuracy</p>
+            </div>
           </div>
-          <div className="glass-panel rounded-xl p-4 text-center">
-            <Clock className="w-4 h-4 mx-auto mb-2" style={{ color: 'var(--accent-primary)' }} />
-            <p className="text-2xl font-bold tabular-nums" style={{ color: 'var(--text-untyped)' }}>
-              {formatDuration(stats.totalTime)}
-            </p>
-            <p className="text-xs" style={{ color: 'var(--text-typed)' }}>Total Time</p>
-          </div>
-          <div className="glass-panel rounded-xl p-4 text-center">
-            <Target className="w-4 h-4 mx-auto mb-2" style={{ color: 'var(--accent-primary)' }} />
-            <p className="text-2xl font-bold tabular-nums" style={{ color: 'var(--text-untyped)' }}>
-              {Math.round(stats.avgWpm)}
-            </p>
-            <p className="text-xs" style={{ color: 'var(--text-typed)' }}>Avg WPM</p>
-          </div>
-          <div className="glass-panel rounded-xl p-4 text-center">
-            <Target className="w-4 h-4 mx-auto mb-2" style={{ color: 'var(--accent-primary)' }} />
-            <p className="text-2xl font-bold tabular-nums" style={{ color: 'var(--text-untyped)' }}>
-              {formatNumber(stats.avgAccuracy)}%
-            </p>
-            <p className="text-xs" style={{ color: 'var(--text-typed)' }}>Avg Accuracy</p>
-          </div>
-        </div>
+        </section>
       )}
 
       {/* WPM Trend Chart */}
       {trendData.length > 1 && (
-        <div className="glass-panel rounded-2xl p-6">
-          <h3 className="text-sm font-medium mb-4" style={{ color: 'var(--text-typed)' }}>
+        <section aria-labelledby="profile-trend-heading" className="glass-panel rounded-2xl p-6">
+          <h2 id="profile-trend-heading" className="text-sm font-medium mb-4" style={{ color: 'var(--text-typed)' }}>
             WPM Trend (Last 20 Tests)
-          </h3>
-          <div className="w-full" style={{ height: '220px' }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={trendData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
-                <XAxis
-                  dataKey="test"
-                  tick={{ fill: 'var(--text-typed)', fontSize: 11 }}
-                  axisLine={{ stroke: 'rgba(255,255,255,0.1)' }}
-                  tickLine={false}
-                />
-                <YAxis
-                  tick={{ fill: 'var(--text-typed)', fontSize: 11 }}
-                  axisLine={{ stroke: 'rgba(255,255,255,0.1)' }}
-                  tickLine={false}
-                />
-                <Tooltip
-                  contentStyle={{
-                    background: 'rgba(15, 23, 42, 0.9)',
-                    border: '1px solid rgba(255,255,255,0.1)',
-                    borderRadius: '12px',
-                    backdropFilter: 'blur(20px)',
-                    color: 'var(--text-untyped)',
-                    fontSize: '12px',
-                  }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="wpm"
-                  stroke="var(--accent-primary)"
-                  strokeWidth={2}
-                  dot={{ fill: 'var(--accent-primary)', r: 3 }}
-                  name="WPM"
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
+          </h2>
+          <ProfileTrendChart data={trendData} />
+        </section>
       )}
 
       {/* Recent Tests */}
       {tests.length > 0 && (
-        <div className="glass-panel rounded-2xl overflow-hidden">
+        <section aria-labelledby="profile-recent-heading" className="glass-panel rounded-2xl overflow-hidden">
           <div className="px-6 py-4" style={{ borderBottom: '1px solid var(--glass-border)' }}>
-            <h3 className="text-sm font-medium" style={{ color: 'var(--text-typed)' }}>
+            <h2 id="profile-recent-heading" className="text-sm font-medium" style={{ color: 'var(--text-typed)' }}>
               Recent Tests
-            </h3>
+            </h2>
           </div>
           <div className="divide-y" style={{ borderColor: 'var(--glass-border)' }}>
             {tests.slice(0, 15).map((test) => (
@@ -374,18 +359,27 @@ export default function ProfileDashboard() {
               </div>
             ))}
           </div>
-        </div>
+        </section>
       )}
 
       {/* Empty State */}
       {tests.length === 0 && (
-        <div className="glass-panel rounded-2xl p-16 text-center">
-          <p className="text-lg font-medium mb-2" style={{ color: 'var(--text-untyped)' }}>
+        <div className="glass-panel rounded-2xl p-16 text-center space-y-4">
+          <p className="text-lg font-medium" style={{ color: 'var(--text-untyped)' }}>
             No tests yet
           </p>
-          <p className="text-sm" style={{ color: 'var(--text-typed)' }}>
-            Complete a typing test to see your stats here.
+          <p className="text-sm" style={{ color: '#94a3b8' }}>
+            Complete a typing speed test to see your WPM stats and personal bests here.
           </p>
+          <div className="pt-2">
+            <Link
+              href="/"
+              className="glass-pill inline-flex px-5 py-2 text-sm font-medium"
+              style={{ color: 'var(--accent-primary)' }}
+            >
+              Start a Free Typing Test
+            </Link>
+          </div>
         </div>
       )}
     </div>

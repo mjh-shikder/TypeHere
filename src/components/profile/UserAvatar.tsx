@@ -7,9 +7,15 @@ interface UserAvatarProps {
   src: string | null;
   name: string;
   className: string;
+  size?: number;
 }
 
-export default function UserAvatar({ src, name, className }: UserAvatarProps) {
+export default function UserAvatar({
+  src,
+  name,
+  className,
+  size = 40,
+}: UserAvatarProps) {
   const [imageFailed, setImageFailed] = useState(false);
 
   if (src && !imageFailed) {
@@ -17,6 +23,10 @@ export default function UserAvatar({ src, name, className }: UserAvatarProps) {
       <img
         src={src}
         alt={`${name}'s profile picture`}
+        width={size}
+        height={size}
+        loading="lazy"
+        decoding="async"
         className={`${className} rounded-full object-cover`}
         onError={() => setImageFailed(true)}
       />
@@ -34,7 +44,7 @@ export default function UserAvatar({ src, name, className }: UserAvatarProps) {
           {name.trim().charAt(0).toUpperCase()}
         </span>
       ) : (
-        <UserRound className="w-1/2 h-1/2" style={{ color: 'var(--text-typed)' }} />
+        <UserRound className="w-1/2 h-1/2" style={{ color: 'var(--text-typed)' }} aria-hidden="true" />
       )}
     </div>
   );

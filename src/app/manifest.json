@@ -1,0 +1,27 @@
+{
+  "name": "TypeHere — Free Online Typing Test & WPM Practice",
+  "short_name": "TypeHere",
+  "description": "Practice typing for free with 1, 3, and 5-minute timed WPM tests, Ghost Personal Best racing, detailed keystroke analytics, and global leaderboards.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#07090e",
+  "theme_color": "#07090e",
+  "categories": ["education", "productivity", "utilities"],
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "any",
+      "type": "image/x-icon"
+    },
+    {
+      "src": "/icon",
+      "sizes": "48x48",
+      "type": "image/png"
+    },
+    {
+      "src": "/apple-icon",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ]
+}

@@ -1,19 +1,32 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import dynamic from 'next/dynamic';
 import { useSession } from 'next-auth/react';
 import { useTypingStore } from '@/store/useTypingStore';
 import { getPersonalBest } from '@/lib/local-storage';
 import { interpolateGhostCharIndex } from '@/lib/metrics';
 import WordStream from './WordStream';
 import SmoothCaret from './SmoothCaret';
-import PostTestSummary from './PostTestSummary';
 import type { PerSecondStat, TestDuration } from '@/types/typing';
 
-const DURATION_OPTIONS: { value: TestDuration; label: string }[] = [
-  { value: 60, label: '1m' },
-  { value: 180, label: '3m' },
-  { value: 300, label: '5m' },
+const PostTestSummary = dynamic(() => import('./PostTestSummary'), {
+  ssr: false,
+  loading: () => (
+    <div className="w-full max-w-4xl mx-auto px-4">
+      <div className="glass-panel rounded-2xl p-8 text-center" role="status">
+        <p className="text-sm" style={{ color: '#94a3b8' }}>
+          Loading typing test results...
+        </p>
+      </div>
+    </div>
+  ),
+});
+
+const DURATION_OPTIONS: { value: TestDuration; label: string; ariaLabel: string }[] = [
+  { value: 60, label: '1m', ariaLabel: '1 minute typing test' },
+  { value: 180, label: '3m', ariaLabel: '3 minute typing test' },
+  { value: 300, label: '5m', ariaLabel: '5 minute typing test' },
 ];
 
 /**
@@ -23,6 +36,7 @@ const DURATION_OPTIONS: { value: TestDuration; label: string }[] = [
 export default function TypingArena() {
   const phase = useTypingStore((s) => s.phase);
   const duration = useTypingStore((s) => s.duration);
+  const fontSize = useTypingStore((s) => s.fontSize);
   const timeRemaining = useTypingStore((s) => s.timeRemaining);
   const setDuration = useTypingStore((s) => s.setDuration);
   const handleKeyPress = useTypingStore((s) => s.handleKeyPress);
@@ -181,6 +195,11 @@ export default function TypingArena() {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
+  const sizeClass =
+    fontSize === 'small' ? 'text-typing-small' :
+    fontSize === 'large' ? 'text-typing-large' :
+    'text-typing-medium';
+
   // If test is finished, show PostTestSummary
   if (phase === 'finished') {
     return <PostTestSummary />;
@@ -189,15 +208,22 @@ export default function TypingArena() {
   return (
     <div className="w-full max-w-4xl mx-auto px-4">
       {/* Mode Pills & Timer */}
-      <div className="flex items-center justify-center gap-4 mb-12">
+      <div className="flex items-center justify-center gap-4 mb-10">
         {/* Duration Selector Pills */}
-        <div className="flex items-center gap-1 glass-panel rounded-full p-1">
+        <div
+          role="group"
+          aria-label="Test duration"
+          className="flex items-center gap-1 glass-panel rounded-full p-1"
+        >
           {DURATION_OPTIONS.map((opt) => (
             <button
               key={opt.value}
+              type="button"
               onClick={() => setDuration(opt.value)}
               className="glass-pill px-5 py-2 text-sm font-medium transition-all"
               data-active={duration === opt.value}
+              aria-pressed={duration === opt.value}
+              aria-label={opt.ariaLabel}
               disabled={phase === 'typing'}
               style={{
                 color: duration === opt.value ? 'var(--accent-primary)' : 'var(--text-typed)',
@@ -210,9 +236,12 @@ export default function TypingArena() {
         </div>
         {ghostTimeline && (
           <button
+            type="button"
             onClick={() => setShowGhost(!showGhost)}
             className="glass-pill px-4 py-2 text-sm font-medium"
             data-active={showGhost}
+            aria-pressed={showGhost}
+            aria-label="Toggle Ghost Personal Best pacer cursor"
             style={{ color: showGhost ? 'var(--accent-primary)' : 'var(--text-typed)' }}
           >
             Ghost PB
@@ -222,6 +251,8 @@ export default function TypingArena() {
         {/* Timer Display */}
         {phase === 'typing' && (
           <div
+            role="timer"
+            aria-label="Time remaining"
             className="text-3xl font-mono font-bold tabular-nums"
             style={{ color: 'var(--accent-primary)' }}
           >
@@ -246,7 +277,15 @@ export default function TypingArena() {
         )}
         <SmoothCaret containerRef={containerRef} />
 
-        {ready && <WordStream />}
+        {ready ? (
+          <WordStream />
+        ) : (
+          <div
+            className={`w-full overflow-hidden ${sizeClass}`}
+            style={{ height: 'calc(2em * 3)' }}
+            aria-hidden="true"
+          />
+        )}
 
         {/* Hidden Input */}
         <input
@@ -259,19 +298,19 @@ export default function TypingArena() {
           autoCapitalize="off"
           spellCheck={false}
           tabIndex={0}
-          aria-label="Typing input"
+          aria-label="Typing test input"
         />
       </div>
 
       {phase === 'idle' && (
-        <p className="text-center mt-4 text-sm" style={{ color: 'var(--text-typed)' }}>
+        <p className="text-center mt-4 text-sm" style={{ color: '#94a3b8' }}>
           Start typing to begin the test...
         </p>
       )}
 
       {/* Reset Hint */}
       <div className="flex justify-center mt-6">
-        <div className="flex items-center gap-2 text-xs" style={{ color: 'var(--text-typed)' }}>
+        <div className="flex items-center gap-2 text-xs" style={{ color: '#94a3b8' }}>
           <kbd className="glass-pill px-2 py-0.5 text-[10px]">Tab</kbd>
           <span>+</span>
           <kbd className="glass-pill px-2 py-0.5 text-[10px]">Enter</kbd>

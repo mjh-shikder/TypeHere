@@ -41,17 +41,18 @@ export default function LoginPanel() {
   return (
     <div className="glass-panel rounded-2xl p-8 w-full max-w-md">
       <div className="flex items-center justify-center gap-2 mb-2">
-        <Keyboard className="w-6 h-6" style={{ color: 'var(--accent-primary)' }} />
+        <Keyboard className="w-6 h-6" style={{ color: 'var(--accent-primary)' }} aria-hidden="true" />
         <h1 className="text-2xl font-bold" style={{ color: 'var(--text-untyped)' }}>
           Sign in to TypeHere
         </h1>
       </div>
-      <p className="text-sm text-center mb-8" style={{ color: 'var(--text-typed)' }}>
+      <p className="text-sm text-center mb-8" style={{ color: '#94a3b8' }}>
         Save tests across devices, claim a leaderboard spot, and track detailed progress.
       </p>
 
       <div className="space-y-3">
         <button
+          type="button"
           onClick={() => signIn('google', { callbackUrl: '/' })}
           className="glass-pill w-full px-4 py-3 flex items-center justify-center gap-2 font-medium"
           style={{ color: 'var(--text-untyped)' }}

@@ -142,16 +142,18 @@ export default function LeaderboardTable() {
       {/* Filters */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
         {/* Duration Filter */}
-        <div className="flex items-center gap-1 glass-panel rounded-full p-1">
+        <div role="group" aria-label="Filter by test duration" className="flex items-center gap-1 glass-panel rounded-full p-1">
           {DURATION_OPTIONS.map((opt) => (
             <button
               key={opt.value}
+              type="button"
               onClick={() => {
                 setDuration(opt.value);
                 setPage(1);
               }}
               className="glass-pill px-4 py-2 text-sm font-medium"
               data-active={duration === opt.value}
+              aria-pressed={duration === opt.value}
               style={{
                 color: duration === opt.value ? 'var(--accent-primary)' : 'var(--text-typed)',
               }}
@@ -162,16 +164,18 @@ export default function LeaderboardTable() {
         </div>
 
         {/* Timeframe Filter */}
-        <div className="flex items-center gap-1 glass-panel rounded-full p-1">
+        <div role="group" aria-label="Filter by leaderboard timeframe" className="flex items-center gap-1 glass-panel rounded-full p-1">
           {TIMEFRAME_OPTIONS.map((opt) => (
             <button
               key={opt.value}
+              type="button"
               onClick={() => {
                 setTimeframe(opt.value);
                 setPage(1);
               }}
               className="glass-pill px-4 py-2 text-sm font-medium flex items-center gap-1.5"
               data-active={timeframe === opt.value}
+              aria-pressed={timeframe === opt.value}
               style={{
                 color: timeframe === opt.value ? 'var(--accent-primary)' : 'var(--text-typed)',
               }}
@@ -185,13 +189,13 @@ export default function LeaderboardTable() {
 
       {/* Table */}
       <div className="glass-panel rounded-2xl overflow-hidden">
-        <table className="w-full">
+        <table className="w-full" aria-label="Global typing speed leaderboard rankings">
           <thead>
             <tr style={{ borderBottom: '1px solid var(--glass-border)' }}>
-              <th className="w-14 sm:w-16 text-left text-xs font-medium px-4 sm:px-6 py-4" style={{ color: 'var(--text-typed)' }}>#</th>
-              <th className="text-left text-xs font-medium px-4 sm:px-6 py-4" style={{ color: 'var(--text-typed)' }}>User</th>
-              <th className="w-24 sm:w-32 text-right text-xs font-medium px-4 sm:px-6 py-4" style={{ color: 'var(--text-typed)' }}>WPM</th>
-              <th className="w-24 sm:w-32 text-right text-xs font-medium px-4 sm:px-6 py-4 hidden sm:table-cell" style={{ color: 'var(--text-typed)' }}>Accuracy</th>
+              <th scope="col" className="w-14 sm:w-16 text-left text-xs font-medium px-4 sm:px-6 py-4" style={{ color: 'var(--text-typed)' }}>#</th>
+              <th scope="col" className="text-left text-xs font-medium px-4 sm:px-6 py-4" style={{ color: 'var(--text-typed)' }}>User</th>
+              <th scope="col" className="w-24 sm:w-32 text-right text-xs font-medium px-4 sm:px-6 py-4" style={{ color: 'var(--text-typed)' }}>WPM</th>
+              <th scope="col" className="w-24 sm:w-32 text-right text-xs font-medium px-4 sm:px-6 py-4 hidden sm:table-cell" style={{ color: 'var(--text-typed)' }}>Accuracy</th>
             </tr>
           </thead>
           <tbody>
@@ -276,6 +280,7 @@ export default function LeaderboardTable() {
                                     : null
                                 }
                                 name={entry.username}
+                                size={28}
                                 className="w-7 h-7 shrink-0"
                               />
                               <Link

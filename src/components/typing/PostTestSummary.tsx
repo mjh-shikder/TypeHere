@@ -219,13 +219,14 @@ export default function PostTestSummary() {
       </div>
 
       {/* Performance Chart */}
-      <div className="glass-panel rounded-2xl p-6">
-        <h3
+      <section aria-labelledby="performance-chart-heading" className="glass-panel rounded-2xl p-6">
+        <h2
+          id="performance-chart-heading"
           className="text-sm font-medium mb-4"
           style={{ color: 'var(--text-typed)' }}
         >
           Performance Over Time
-        </h3>
+        </h2>
         <div className="w-full" style={{ height: '280px' }}>
           <ResponsiveContainer width="100%" height="100%">
             <ComposedChart data={chartData}>
@@ -278,17 +279,18 @@ export default function PostTestSummary() {
             </ComposedChart>
           </ResponsiveContainer>
         </div>
-      </div>
+      </section>
 
       {/* Mistyped Keys */}
       {topMistyped.length > 0 && (
-        <div className="glass-panel rounded-2xl p-6">
-          <h3
+        <section aria-labelledby="mistyped-keys-heading" className="glass-panel rounded-2xl p-6">
+          <h2
+            id="mistyped-keys-heading"
             className="text-sm font-medium mb-4"
             style={{ color: 'var(--text-typed)' }}
           >
             Most Mistyped
-          </h3>
+          </h2>
           <div className="flex flex-wrap gap-2">
             {topMistyped.map(([key, count]) => (
               <div
@@ -304,7 +306,7 @@ export default function PostTestSummary() {
               </div>
             ))}
           </div>
-        </div>
+        </section>
       )}
 
       {/* Action Buttons */}
