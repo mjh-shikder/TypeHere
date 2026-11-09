@@ -80,6 +80,10 @@ export interface TypingState {
   ghostTimeline: PerSecondStat[] | null;
   showGhost: boolean;
 
+  // --- Guest/Leaderboard Sync State ---
+  isGuestSyncing: boolean;
+  guestSyncVersion: number;
+
   // --- Actions ---
   setDuration: (duration: TestDuration) => void;
   setWordBankSize: (size: WordBankSize) => void;
@@ -89,6 +93,8 @@ export interface TypingState {
   setCursorStyle: (style: CursorStyle) => void;
   setGhostTimeline: (timeline: PerSecondStat[] | null) => void;
   setShowGhost: (show: boolean) => void;
+  setGuestSyncing: (syncing: boolean) => void;
+  bumpGuestSyncVersion: () => void;
   hydrateSettings: (settings: Partial<UserSettings>) => void;
 
   startTest: () => void;
@@ -157,6 +163,9 @@ export const useTypingStore = create<TypingState>((set, get) => ({
   ghostTimeline: null,
   showGhost: false,
 
+  isGuestSyncing: false,
+  guestSyncVersion: 0,
+
   // --- Settings Actions ---
   setDuration: (duration) => {
     const state = get();
@@ -209,6 +218,8 @@ export const useTypingStore = create<TypingState>((set, get) => ({
   },
   setGhostTimeline: (timeline) => set({ ghostTimeline: timeline }),
   setShowGhost: (show) => set({ showGhost: show }),
+  setGuestSyncing: (syncing) => set({ isGuestSyncing: syncing }),
+  bumpGuestSyncVersion: () => set((s) => ({ guestSyncVersion: s.guestSyncVersion + 1 })),
   hydrateSettings: (settings) => {
     const patch: Partial<TypingState> = {};
     if (settings.theme) {

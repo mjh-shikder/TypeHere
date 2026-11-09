@@ -12,6 +12,14 @@ const MAX_STORED_TESTS = 100;
 const GUEST_ID_KEY = 'typehere_guest_id';
 
 /**
+ * Read existing guest identity from localStorage without creating one
+ */
+export function getGuestId(): string | null {
+  if (typeof window === 'undefined') return null;
+  return localStorage.getItem(GUEST_ID_KEY);
+}
+
+/**
  * Get or create a persistent guest identity stored in localStorage.
  * Format: "ghostuser_XXXX" where XXXX is a random 4-digit number.
  */

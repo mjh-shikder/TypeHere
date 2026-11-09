@@ -5,9 +5,10 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import type { Prisma } from '@prisma/client';
 import { auth } from '@/lib/auth';
 import prisma from '@/lib/prisma';
-import { submitTestSchema, syncGuestTestsSchema } from '@/lib/validations';
+import { submitTestSchema, localTestSummarySchema } from '@/lib/validations';
 import { validateTestSubmission } from '@/lib/anti-cheat';
 import type { SubmitTestDTO, LocalTestSummary } from '@/types/typing';
 
@@ -83,70 +84,102 @@ export async function syncGuestTestsAction(tests: LocalTestSummary[], guestId?: 
     return { error: 'Authentication required' };
   }
 
-  // Validate input (max 50 tests per sync)
-  const parsed = syncGuestTestsSchema.safeParse({ tests });
-  if (!parsed.success) {
-    return { error: 'Invalid sync data', details: parsed.error.flatten() };
+  // Validate each item individually so one malformed legacy test cannot block sync/cleanup
+  const validatedTests: LocalTestSummary[] = [];
+  for (const rawTest of (Array.isArray(tests) ? tests : []).slice(0, 50)) {
+    const parsed = localTestSummarySchema.safeParse(rawTest);
+    if (parsed.success) {
+      validatedTests.push(parsed.data);
+    }
   }
 
-  const validatedTests = parsed.data.tests;
+  const validGuestId = guestId && /^ghostuser_\d{4}$/.test(guestId) ? guestId : null;
 
   try {
-    // Check for duplicates by matching id
-    const existingIds = await prisma.testResult.findMany({
-      where: {
-        userId: session.user.id,
-        id: { in: validatedTests.map((t) => t.id) },
-      },
-      select: { id: true },
-    });
+    const result = await prisma.$transaction(async (tx) => {
+      let claimedCount = 0;
 
-    const existingIdSet = new Set(existingIds.map((e) => e.id));
-    const newTests = validatedTests.filter((t) => !existingIdSet.has(t.id));
+      // 1. Transfer any ghost leaderboard entries for this guest identity to the signed-in user
+      if (validGuestId) {
+        const claimed = await tx.testResult.updateMany({
+          where: { guestName: validGuestId },
+          data: {
+            userId: session.user.id,
+            guestName: null,
+          },
+        });
+        claimedCount += claimed.count;
+      }
 
-    if (newTests.length === 0) {
-      // Clean up ghost leaderboard entries even if nothing to sync
-      if (guestId && /^ghostuser_\d{4}$/.test(guestId)) {
-        await prisma.testResult.deleteMany({
-          where: { guestName: guestId },
+      if (validatedTests.length === 0) {
+        return { synced: claimedCount, syncedIds: [] as string[] };
+      }
+
+      const testIds = validatedTests.map((t) => t.id);
+
+      // 2. Also claim any ghost rows matching these specific test IDs (fallback if guestId changed/missing)
+      const claimedById = await tx.testResult.updateMany({
+        where: {
+          id: { in: testIds },
+          guestName: { not: null },
+        },
+        data: {
+          userId: session.user.id,
+          guestName: null,
+        },
+      });
+      claimedCount += claimedById.count;
+
+      // 3. Check which test IDs already exist in TestResult (including newly claimed rows)
+      const existingIds = await tx.testResult.findMany({
+        where: {
+          id: { in: testIds },
+        },
+        select: { id: true },
+      });
+
+      const existingIdSet = new Set(existingIds.map((e) => e.id));
+      const newTests = validatedTests.filter((t) => !existingIdSet.has(t.id));
+
+      // 4. Insert remaining unsynced tests not yet present in DB
+      if (newTests.length > 0) {
+        await tx.testResult.createMany({
+          data: newTests.map((t) => ({
+            id: t.id,
+            userId: session.user.id,
+            guestName: null,
+            duration: t.duration,
+            wpm: t.wpm,
+            rawWpm: t.rawWpm,
+            accuracy: t.accuracy,
+            consistency: t.consistency,
+            charactersTotal: t.charactersTotal,
+            charactersCorrect: t.charactersCorrect,
+            charactersWrong: t.charactersWrong,
+            charactersExtra: t.charactersExtra,
+            charactersMissed: t.charactersMissed,
+            timeline: t.timeline as unknown as Prisma.InputJsonValue,
+            mistypedKeys: t.mistypedKeys as unknown as Prisma.InputJsonValue,
+            isVerified: isSaneSummary(t),
+            createdAt: new Date(t.createdAt),
+          })),
+          skipDuplicates: true,
         });
       }
-      return { success: true, synced: 0 };
-    }
 
-    // Batch insert
-    await prisma.testResult.createMany({
-      data: newTests.map((t) => ({
-        id: t.id,
-        userId: session.user.id,
-        duration: t.duration,
-        wpm: t.wpm,
-        rawWpm: t.rawWpm,
-        accuracy: t.accuracy,
-        consistency: t.consistency,
-        charactersTotal: t.charactersTotal,
-        charactersCorrect: t.charactersCorrect,
-        charactersWrong: t.charactersWrong,
-        charactersExtra: t.charactersExtra,
-        charactersMissed: t.charactersMissed,
-        timeline: t.timeline,
-        mistypedKeys: t.mistypedKeys,
-        isVerified: isSaneSummary(t),
-        createdAt: new Date(t.createdAt),
-      })),
+      return {
+        synced: claimedCount + newTests.length,
+        syncedIds: testIds,
+      };
     });
-
-    // Clean up ghost leaderboard entries for this guest identity
-    if (guestId && /^ghostuser_\d{4}$/.test(guestId)) {
-      await prisma.testResult.deleteMany({
-        where: { guestName: guestId },
-      });
-    }
 
     revalidatePath('/leaderboard');
     revalidatePath('/profile');
+    if (session.user.username) {
+      revalidatePath(`/u/${session.user.username}`);
+    }
 
-    return { success: true, synced: newTests.length, syncedIds: newTests.map((t) => t.id) };
+    return { success: true, synced: result.synced, syncedIds: result.syncedIds };
   } catch (error) {
     console.error('Failed to sync guest tests:', error);
     return { error: 'Failed to sync guest tests' };
@@ -200,8 +233,8 @@ export async function submitGuestTestAction(data: {
         charactersWrong: summary.charactersWrong,
         charactersExtra: summary.charactersExtra,
         charactersMissed: summary.charactersMissed,
-        timeline: summary.timeline as unknown as import('@prisma/client').Prisma.InputJsonValue,
-        mistypedKeys: summary.mistypedKeys as unknown as import('@prisma/client').Prisma.InputJsonValue,
+        timeline: summary.timeline as unknown as Prisma.InputJsonValue,
+        mistypedKeys: summary.mistypedKeys as unknown as Prisma.InputJsonValue,
         isVerified: true,
         createdAt: new Date(summary.createdAt),
       },

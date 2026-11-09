@@ -6,6 +6,7 @@ import Link from 'next/link';
 import type { LocalTestSummary, TestDuration } from '@/types/typing';
 import { getStoredTests, getAllPersonalBests } from '@/lib/local-storage';
 import { formatNumber, formatDuration } from '@/lib/utils';
+import { useTypingStore } from '@/store/useTypingStore';
 import { updateUserSettingsAction } from '@/app/actions/user-actions';
 import {
   LineChart,
@@ -34,6 +35,8 @@ export default function ProfileDashboard() {
   const [bio, setBio] = useState('');
   const [settingsMessage, setSettingsMessage] = useState<string | null>(null);
   const [savingProfile, setSavingProfile] = useState(false);
+  const isGuestSyncing = useTypingStore((s) => s.isGuestSyncing);
+  const guestSyncVersion = useTypingStore((s) => s.guestSyncVersion);
 
   useEffect(() => {
     setTests(getStoredTests());
@@ -48,9 +51,9 @@ export default function ProfileDashboard() {
 
   useEffect(() => {
     const usernameKey = session?.user?.username;
-    if (status !== 'authenticated' || !usernameKey) return;
+    if (status !== 'authenticated' || !usernameKey || isGuestSyncing) return;
 
-    void fetch(`/api/users/${usernameKey}/stats`)
+    void fetch(`/api/users/${usernameKey}/stats`, { cache: 'no-store' })
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
         if (!data) return;
@@ -114,7 +117,7 @@ export default function ProfileDashboard() {
           );
         }
       });
-  }, [status, session?.user?.username]);
+  }, [status, session?.user?.username, isGuestSyncing, guestSyncVersion]);
 
   // Aggregate stats
   const stats = useMemo(() => {

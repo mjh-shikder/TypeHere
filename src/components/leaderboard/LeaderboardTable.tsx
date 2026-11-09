@@ -8,6 +8,7 @@ import type {
   LeaderboardEntry,
 } from '@/types/typing';
 import { formatNumber } from '@/lib/utils';
+import { useTypingStore } from '@/store/useTypingStore';
 import UserAvatar from '@/components/profile/UserAvatar';
 import { Trophy, Clock, Flame } from 'lucide-react';
 
@@ -34,6 +35,8 @@ export default function LeaderboardTable() {
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
+  const isGuestSyncing = useTypingStore((s) => s.isGuestSyncing);
+  const guestSyncVersion = useTypingStore((s) => s.guestSyncVersion);
   const limit = 50;
 
   useEffect(() => {
@@ -41,13 +44,20 @@ export default function LeaderboardTable() {
   }, [duration, timeframe]);
 
   useEffect(() => {
+    if (isGuestSyncing) {
+      setLoading(true);
+      return;
+    }
+
+    let cancelled = false;
     const fetchLeaderboard = async () => {
       setLoading(true);
       try {
         const res = await fetch(
-          `/api/leaderboard?duration=${duration}&timeframe=${timeframe}&page=${page}&limit=${limit}`
+          `/api/leaderboard?duration=${duration}&timeframe=${timeframe}&page=${page}&limit=${limit}`,
+          { cache: 'no-store' }
         );
-        if (res.ok) {
+        if (res.ok && !cancelled) {
           const data = await res.json();
           setEntries(data.entries || []);
           setTotalCount(data.totalCount || 0);
@@ -55,12 +65,17 @@ export default function LeaderboardTable() {
       } catch {
         // Silently fail — show empty state
       } finally {
-        setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
     };
 
-    fetchLeaderboard();
-  }, [duration, timeframe, page]);
+    void fetchLeaderboard();
+    return () => {
+      cancelled = true;
+    };
+  }, [duration, timeframe, page, isGuestSyncing, guestSyncVersion]);
 
   const getRankStyle = (rank: number) => {
     if (rank === 1) return { color: '#ffd700' }; // Gold

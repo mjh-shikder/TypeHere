@@ -7,6 +7,7 @@ import {
   getStoredSettings,
   getUnsyncedTests,
   markTestsSynced,
+  getGuestId,
   getOrCreateGuestId,
   clearGuestId,
 } from '@/lib/local-storage';
@@ -18,6 +19,8 @@ function AuthRuntime() {
   const phase = useTypingStore((s) => s.phase);
   const summary = useTypingStore((s) => s.lastCompletedSummary);
   const telemetry = useTypingStore((s) => s.lastCompletedTelemetry);
+  const setGuestSyncing = useTypingStore((s) => s.setGuestSyncing);
+  const bumpGuestSyncVersion = useTypingStore((s) => s.bumpGuestSyncVersion);
   const submittedIdRef = useRef<string | null>(null);
   const guestSubmittedIdRef = useRef<string | null>(null);
   const syncedOnceRef = useRef(false);
@@ -39,36 +42,48 @@ function AuthRuntime() {
 
   // Sync guest tests to DB on login, then clean up ghost entries
   useEffect(() => {
-    if (status !== 'authenticated' || syncedOnceRef.current) return;
+    if (status !== 'authenticated') {
+      syncedOnceRef.current = false;
+      return;
+    }
+    if (syncedOnceRef.current) return;
 
     const unsynced = getUnsyncedTests().slice(0, 50);
-    const guestId = getOrCreateGuestId();
+    const guestId = getGuestId();
     syncedOnceRef.current = true;
 
-    if (unsynced.length === 0) {
-      // Still clean up any ghost leaderboard entries
-      void syncGuestTestsAction([], guestId).then(() => {
-        clearGuestId();
-      });
+    if (unsynced.length === 0 && !guestId) {
       return;
     }
 
-    void syncGuestTestsAction(unsynced, guestId).then((result) => {
-      if (result.success && result.syncedIds) {
-        markTestsSynced(result.syncedIds);
-        clearGuestId();
-      } else {
+    setGuestSyncing(true);
+    void syncGuestTestsAction(unsynced, guestId)
+      .then((result) => {
+        if (result.success) {
+          if (result.syncedIds && result.syncedIds.length > 0) {
+            markTestsSynced(result.syncedIds);
+          }
+          clearGuestId();
+          setGuestSyncing(false);
+          bumpGuestSyncVersion();
+        } else {
+          syncedOnceRef.current = false;
+        }
+      })
+      .catch(() => {
         syncedOnceRef.current = false;
-      }
-    });
-  }, [status]);
+      })
+      .finally(() => {
+        setGuestSyncing(false);
+      });
+  }, [status, setGuestSyncing, bumpGuestSyncVersion]);
 
   // Submit authenticated test to DB
   useEffect(() => {
     if (status !== 'authenticated' || phase !== 'finished' || !summary || !telemetry) {
       return;
     }
-    if (submittedIdRef.current === summary.id) return;
+    if (submittedIdRef.current === summary.id || guestSubmittedIdRef.current === summary.id) return;
 
     submittedIdRef.current = summary.id;
     void submitTestResultAction({
@@ -85,14 +100,19 @@ function AuthRuntime() {
       timeline: summary.timeline,
       mistypedKeys: summary.mistypedKeys,
       telemetry,
-    }).then((result) => {
-      if (result.success) {
-        markTestsSynced([summary.id]);
-      } else {
+    })
+      .then((result) => {
+        if (result.success) {
+          markTestsSynced([summary.id]);
+          bumpGuestSyncVersion();
+        } else {
+          submittedIdRef.current = null;
+        }
+      })
+      .catch(() => {
         submittedIdRef.current = null;
-      }
-    });
-  }, [status, phase, summary, telemetry]);
+      });
+  }, [status, phase, summary, telemetry, bumpGuestSyncVersion]);
 
   // Submit guest test to public leaderboard (ghost user in DB)
   useEffect(() => {
@@ -104,10 +124,18 @@ function AuthRuntime() {
     guestSubmittedIdRef.current = summary.id;
     const guestName = getOrCreateGuestId();
 
-    void submitGuestTestAction({ guestName, summary }).catch(() => {
-      guestSubmittedIdRef.current = null;
-    });
-  }, [status, phase, summary]);
+    void submitGuestTestAction({ guestName, summary })
+      .then((result) => {
+        if (result.success) {
+          bumpGuestSyncVersion();
+        } else {
+          guestSubmittedIdRef.current = null;
+        }
+      })
+      .catch(() => {
+        guestSubmittedIdRef.current = null;
+      });
+  }, [status, phase, summary, bumpGuestSyncVersion]);
 
   return null;
 }

@@ -102,12 +102,19 @@ export async function GET(request: NextRequest) {
       isGuest: r.user.username === GHOST_USERNAME,
     }));
 
-    return NextResponse.json({
-      entries,
-      totalCount,
-      page,
-      limit,
-    });
+    return NextResponse.json(
+      {
+        entries,
+        totalCount,
+        page,
+        limit,
+      },
+      {
+        headers: {
+          'Cache-Control': 'no-store',
+        },
+      }
+    );
   } catch (error) {
     console.error('Leaderboard query failed:', error);
     return NextResponse.json(
