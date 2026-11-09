@@ -8,7 +8,7 @@ An open-source typing practice app for improving **speed, accuracy, and stamina*
 Jump into a test as a guest, explore your results, and sign in when you want to
 sync your progress or climb the leaderboards.
 
-<a href="https://your-live-url-here.example.com">
+<a href="https://type.mjhshikder.com/">
   <img src="https://img.shields.io/badge/%E2%96%B6%20LIVE%20APP-Open%20TypeHere-f59e0b?style=for-the-badge" alt="Open the TypeHere live app">
 </a>
 
