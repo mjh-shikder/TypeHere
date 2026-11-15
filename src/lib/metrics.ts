@@ -25,12 +25,104 @@ export function calculateRawWPM(totalCharsTyped: number, elapsedSeconds: number)
 }
 
 /**
- * Calculate Accuracy (%)
- * Accuracy = (Correct Characters Typed / Total Characters Typed) × 100
+ * Calculate accuracy (%) from already-counted correct and total inputs.
  */
 export function calculateAccuracy(correctChars: number, totalCharsTyped: number): number {
   if (totalCharsTyped <= 0) return 100;
   return Math.round((correctChars / totalCharsTyped) * 10000) / 100;
+}
+
+interface AccuracyWordProgress {
+  characters: Array<boolean | null>;
+  extraCharacters: number;
+  isCompleted: boolean;
+  isCorrect: boolean;
+}
+
+/**
+ * Recalculate accuracy from the final typed state represented by keystrokes.
+ * Correct spaces count as correct inputs; backspace and clear-word actions
+ * remove the characters they undo, while missed characters remain uncounted.
+ */
+export function calculateAccuracyFromEvents(events: KeystrokeEvent[], words: string[]): number {
+  if (words.length === 0) return 100;
+
+  const progress: AccuracyWordProgress[] = words.map((word) => ({
+    characters: Array.from({ length: word.length }, () => null),
+    extraCharacters: 0,
+    isCompleted: false,
+    isCorrect: false,
+  }));
+
+  let activeWordIndex = 0;
+  let activeCharIndex = 0;
+  let correctSpaces = 0;
+  let totalSpaces = 0;
+
+  for (const event of events) {
+    const current = progress[activeWordIndex];
+    if (!current) continue;
+
+    if (event.k === 'Backspace') {
+      if (current.extraCharacters > 0) {
+        current.extraCharacters--;
+      } else if (activeCharIndex === 0 && activeWordIndex > 0) {
+        const previous = progress[activeWordIndex - 1];
+        if (previous.isCompleted && !previous.isCorrect) {
+          previous.isCompleted = false;
+          activeWordIndex--;
+          activeCharIndex = previous.characters.length;
+          for (let i = previous.characters.length - 1; i >= 0; i--) {
+            if (previous.characters[i] !== null) {
+              activeCharIndex = i + 1;
+              break;
+            }
+          }
+        }
+      } else if (activeCharIndex > 0) {
+        activeCharIndex--;
+        current.characters[activeCharIndex] = null;
+      }
+      continue;
+    }
+
+    if (event.k === 'ClearWord') {
+      current.characters.fill(null);
+      current.extraCharacters = 0;
+      activeCharIndex = 0;
+      continue;
+    }
+
+    if (event.k === 'Space') {
+      totalSpaces++;
+      if (event.c) correctSpaces++;
+      current.isCompleted = true;
+      current.isCorrect = current.extraCharacters === 0 &&
+        current.characters.every((isCorrect) => isCorrect === true);
+      activeWordIndex++;
+      activeCharIndex = 0;
+      continue;
+    }
+
+    if (event.k.length === 1) {
+      if (activeCharIndex >= current.characters.length) {
+        current.extraCharacters++;
+      } else {
+        current.characters[activeCharIndex] = event.c;
+        activeCharIndex++;
+      }
+    }
+  }
+
+  let typedCharacters = 0;
+  let correctCharacters = correctSpaces;
+  for (const word of progress) {
+    const typed = word.characters.filter((isCorrect) => isCorrect !== null);
+    typedCharacters += typed.length + word.extraCharacters;
+    correctCharacters += typed.filter((isCorrect) => isCorrect === true).length;
+  }
+
+  return calculateAccuracy(correctCharacters, typedCharacters + totalSpaces);
 }
 
 /**

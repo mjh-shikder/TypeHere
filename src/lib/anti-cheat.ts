@@ -4,7 +4,7 @@
 // =============================================================================
 
 import type { TestTelemetry, SubmitTestDTO } from '@/types/typing';
-import { calculateNetWPM, calculateRawWPM, calculateAccuracy } from '@/lib/metrics';
+import { calculateNetWPM, calculateRawWPM, calculateAccuracyFromEvents } from '@/lib/metrics';
 
 export interface AntiCheatResult {
   isValid: boolean;
@@ -147,11 +147,9 @@ function verifyMetrics(data: SubmitTestDTO): AntiCheatResult {
 
   // Count correct and total characters from events
   let correctChars = 0;
-  let totalChars = 0;
 
   for (const event of telemetry.events) {
     if (event.k === 'Backspace' || event.k === 'ClearWord') continue;
-    totalChars++;
     if (event.k !== 'Space' && event.c) {
       correctChars++;
     }
@@ -170,7 +168,7 @@ function verifyMetrics(data: SubmitTestDTO): AntiCheatResult {
   }
 
   // Recompute accuracy
-  const recomputedAccuracy = calculateAccuracy(correctChars, totalChars);
+  const recomputedAccuracy = calculateAccuracyFromEvents(telemetry.events, telemetry.words);
   const accuracyDiff = Math.abs(data.accuracy - recomputedAccuracy);
 
   if (accuracyDiff > 3) {

@@ -22,7 +22,7 @@ import type {
   LocalTestSummary,
 } from '@/types/typing';
 import { getInitialWords, getReplenishmentWords } from '@/lib/words';
-import { calculateNetWPM, calculateRawWPM, calculateAccuracy, calculateConsistency } from '@/lib/metrics';
+import { calculateNetWPM, calculateRawWPM, calculateAccuracyFromEvents, calculateConsistency } from '@/lib/metrics';
 import { generateId } from '@/lib/utils';
 import { saveSettings, saveTestResult } from '@/lib/local-storage';
 import type { UserSettings } from '@/types/typing';
@@ -604,7 +604,10 @@ export const useTypingStore = create<TypingState>((set, get) => ({
     // Calculate final metrics
     const finalWPM = calculateNetWPM(state.correctChars, state.duration);
     const finalRawWPM = calculateRawWPM(state.totalCharsTyped, state.duration);
-    const finalAccuracy = calculateAccuracy(state.correctChars, state.totalCharsTyped);
+    const finalAccuracy = calculateAccuracyFromEvents(
+      state.keystrokeEvents,
+      state.rawWords.slice(0, state.activeWordIndex + 1)
+    );
     const finalConsistency = calculateConsistency(state.keystrokeEvents);
 
     // Build telemetry (in-memory only — never stored in localStorage)
